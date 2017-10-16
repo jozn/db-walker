@@ -1,0 +1,146 @@
+package src
+
+import (
+	"database/sql"
+	"fmt"
+	"github.com/jmoiron/sqlx"
+	"ms/sun/helper"
+	"strings"
+)
+
+var XOLogDebug = func(s string, o ...interface{}) {
+	if false {
+		fmt.Println(s, o)
+	}
+}
+
+// MyTables runs a custom query, returning results as Table.
+func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, err error) {
+	// sql query
+	const sqlstr = `SELECT * ` +
+		`FROM information_schema.tables ` +
+		`WHERE table_schema = ? AND table_type = ?`
+
+	// run query
+	XOLogDebug(sqlstr, schema, relkind)
+
+	var res2 = []struct {
+		TABLE_NAME     string //`json:"rec_created_by"  db:"TABLE_NAME"`
+		AUTO_INCREMENT sql.NullInt64
+	}{}
+	err = db.Unsafe().Select(&res2, sqlstr, schema, relkind)
+	helper.NoErr(err)
+
+	//fmt.Println("Mysql loader - load tables: ", res2)
+
+	for i, r := range res2 {
+		t := &Table{
+			TableName: r.TABLE_NAME,
+			DataBase:  schema,
+			Seq:       i,
+		}
+		if r.AUTO_INCREMENT.Valid {
+			t.IsAutoIncrement = true
+		}
+		res = append(res, t)
+	}
+	//helper.PertyPrint(res)
+
+	return res, nil
+}
+
+// My_LoadTableColumns runs a custom query, returning results as Column.
+func My_LoadTableColumns(db *sqlx.DB, schema string, table string) (res []*Column, err error) {
+	var rows = []struct {
+		ORDINAL_POSITION int
+		COLUMN_NAME      string
+		DATA_TYPE        string
+		IS_NULLABLE      string //'YES'
+		COLUMN_DEFAULT   sql.NullString
+		COLUMN_TYPE      string
+		COLUMN_KEY       string //if == 'PRI' then is the primiry key
+		COLUMN_COMMENT   string
+	}{}
+	// sql query
+	const sqlstr = `SELECT * ` +
+		`FROM information_schema.columns ` +
+		`WHERE table_schema = ? AND table_name = ? ` +
+		`ORDER BY ordinal_position ASC`
+
+	// run query
+	XOLogDebug(sqlstr, schema, table)
+
+	err = db.Unsafe().Select(&rows, sqlstr, schema, table)
+	helper.NoErr(err)
+	//fmt.Println("Mysql loader - load tables: ", rows)
+	for _, r := range rows {
+		t := &Column{
+			ColumnName: r.COLUMN_NAME,
+			Seq:        r.ORDINAL_POSITION,
+			Comment:    r.COLUMN_COMMENT,
+		}
+		//fmt.Println("Mysql loader - load tables: ))))))) ", t)
+		res = append(res, t)
+	}
+
+	return res, nil
+}
+
+// MyTableIndexes runs a custom query, returning results as Index.
+func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Index, err error) {
+	// sql query
+	var rows = []struct {
+		INDEX_NAME string
+		IS_UNIQUE  bool
+	}{}
+
+	const sqlstr = `SELECT ` +
+		`DISTINCT INDEX_NAME, ` +
+		`NOT non_unique AS IS_UNIQUE ` +
+		`FROM information_schema.statistics ` +
+		//`WHERE index_name <> 'PRIMARY' AND index_schema = ? AND table_name = ?`
+		`WHERE index_schema = ? AND table_name = ?`
+
+	XOLogDebug(sqlstr, schema, tableName)
+	err = db.Select(&rows, sqlstr, schema, tableName)
+	if err != nil {
+		helper.NoErr(err)
+		return
+	}
+
+	for _, r := range rows {
+		i := &Index{
+			IndexName: r.INDEX_NAME,
+			IsUnique:  r.IS_UNIQUE,
+		}
+		if strings.ToUpper(r.INDEX_NAME) == "PRIMARY" {
+			i.IsPrimary = true
+		}
+
+		rs := []struct {
+			SEQ_IN_INDEX int
+			COLUMN_NAME  string
+		}{}
+		// sql query
+		const sqlstr = `SELECT * ` +
+			//`seq_in_index, ` + //starts from 1
+			//`column_name ` +
+			`FROM information_schema.statistics ` +
+			`WHERE index_schema = ? AND table_name = ? AND index_name = ? ` +
+			`ORDER BY seq_in_index`
+
+		XOLogDebug(sqlstr, schema, tableName, i.IndexName)
+		err = db.Unsafe().Select(&rs, sqlstr, schema, tableName, i.IndexName)
+		if err != nil {
+			helper.NoErr(err)
+			return
+		}
+
+		for _, c := range rs {
+			i.Columns = append(i.Columns, table.GetColumnByName(c.COLUMN_NAME))
+		}
+		res = append(res, i)
+	}
+
+	return res, nil
+}
