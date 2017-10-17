@@ -10,7 +10,9 @@ import (
 
 var IntRE = regexp.MustCompile(`^int(32|64)?$`)
 
-var OutPutBuffer = GenOut{}
+var OutPutBuffer = &GenOut{
+    PackageName: "x",
+}
 
 func Run() {
 	DB, err := sqlx.Connect("mysql", "root:123456@tcp(localhost:3306)/os?charset=utf8mb4")
@@ -18,13 +20,15 @@ func Run() {
 	DB = DB.Unsafe()
 	helper.NoErr(err)
 
-	tables, _ := My_LoadTables(DB, "os", "BASE TABLE")
+	//OutPutBuffer := &GenOut{}
+	OutPutBuffer.Tables, _ = My_LoadTables(DB, "os", "BASE TABLE")
 
-	for _, table := range tables {
+	for _, table := range OutPutBuffer.Tables {
 		table.Columns, _ = My_LoadTableColumns(DB, table.DataBase, table.TableName, table)
 		table.Indexes, _ = MyTableIndexes(DB, table.DataBase, table.TableName, table)
 	}
 
-	helper.PertyPrint(tables)
+	build(OutPutBuffer)
+	helper.PertyPrint(OutPutBuffer.Tables)
 
 }

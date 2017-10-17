@@ -1,7 +1,8 @@
 package src
 
 type GenOut struct {
-	Tables               []Table
+    PackageName          string
+	Tables               []*Table
 	GeneratedPb          string
 	GeneratedPbConverter string
 }
@@ -18,11 +19,14 @@ type Table struct {
 	PrimaryKey      *Column
 	DataBase        string //or schema in PG or tablesapce in cassandra
 	Seq             int
+	Comment         string
 	IsAutoIncrement bool
 	Indexes         []*Index
+	TableNameOut    string //with table "`ms`.`post`"
 	TableNameGo     string
 	TableNameJava   string
 	TableNamePB     string
+	ShortName       string
 }
 
 type Column struct {

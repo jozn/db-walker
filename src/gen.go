@@ -14,7 +14,10 @@ const (
 )
 
 func build(gen *GenOut) {
-	OutGoRPCsStr := buildFromTemplate("rpc.tgo", gen)
+
+	writeOutput("models.go", buildFromTemplate("models.go.tpl", gen))
+
+	/*OutGoRPCsStr := buildFromTemplate("rpc.tgo", gen)
 	writeOutput("pb__gen_ant.go", OutGoRPCsStr)
 
 	OutGoRPCsEmptyStr := buildFromTemplate("rpc_empty_imple.tgo", gen)
@@ -24,6 +27,30 @@ func build(gen *GenOut) {
 	writeOutput("RPC_HANDLERS.java", buildFromTemplate("RPC_HANDLERS.java", gen))
 	writeOutput("PBFlatTypes.java", buildFromTemplate("PBFlatTypes.java", gen))
 	writeOutput("flat.go", buildFromTemplate("flat.tgo", gen))
+	*/
+}
+
+func buildFromTemplateTables(tplName string, gen *GenOut) string {
+	tpl := template.New("go_interface_" + tplName)
+	tpl.Funcs(NewTemplateFuncs())
+	tplGoInterface, err := ioutil.ReadFile(TEMPLATES_DIR + tplName)
+	helper.NoErr(err)
+	tpl, err = tpl.Parse(string(tplGoInterface))
+	helper.NoErr(err)
+
+	buffer := bytes.NewBufferString("")
+
+	for _, table := range gen.Tables {
+		err = tpl.Execute(buffer, table)
+		helper.NoErr(err)
+	}
+
+	return buffer.String()
+}
+
+func writeOutput(fileName, output string) {
+	println(output)
+	ioutil.WriteFile(OUTPUT_DIR+fileName, []byte(output), os.ModeType)
 
 }
 
@@ -40,8 +67,4 @@ func buildFromTemplate(tplName string, gen *GenOut) string {
 	helper.NoErr(err)
 
 	return buffer.String()
-}
-
-func writeOutput(fileName, output string) {
-	ioutil.WriteFile(OUTPUT_DIR+fileName, []byte(output), os.ModeType)
 }
