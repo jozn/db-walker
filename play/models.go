@@ -19,7 +19,6 @@ type Chat struct {
 	CurrentSeq int  //just for peer to peer      
 	
 	_exists, _deleted bool
-
 }
 /*
 := &Chat {
@@ -48,7 +47,6 @@ type Comments struct {
 	CreatedTime int        
 	
 	_exists, _deleted bool
-
 }
 /*
 := &Comments {

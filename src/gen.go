@@ -15,7 +15,9 @@ const (
 
 func build(gen *GenOut) {
 
+    writeOutput("zz_xo.go", buildFromTemplate("xo.go.tpl", gen))
 	writeOutput("models.go", buildFromTemplate("models.go.tpl", gen))
+	genTablesOrma("orm.go.tpl", gen)
 
 	/*OutGoRPCsStr := buildFromTemplate("rpc.tgo", gen)
 	writeOutput("pb__gen_ant.go", OutGoRPCsStr)
@@ -30,22 +32,16 @@ func build(gen *GenOut) {
 	*/
 }
 
-func buildFromTemplateTables(tplName string, gen *GenOut) string {
-	tpl := template.New("go_interface_" + tplName)
-	tpl.Funcs(NewTemplateFuncs())
-	tplGoInterface, err := ioutil.ReadFile(TEMPLATES_DIR + tplName)
-	helper.NoErr(err)
-	tpl, err = tpl.Parse(string(tplGoInterface))
-	helper.NoErr(err)
-
-	buffer := bytes.NewBufferString("")
+func genTablesOrma(tplName string, gen *GenOut) {
+	tpl := _getTemplate(tplName)
 
 	for _, table := range gen.Tables {
-		err = tpl.Execute(buffer, table)
+		buffer := bytes.NewBufferString("")
+		err := tpl.Execute(buffer, table)
 		helper.NoErr(err)
+		writeOutput("z_"+table.TableName+".go", buffer.String())
 	}
 
-	return buffer.String()
 }
 
 func writeOutput(fileName, output string) {
@@ -55,7 +51,7 @@ func writeOutput(fileName, output string) {
 }
 
 func buildFromTemplate(tplName string, gen *GenOut) string {
-	tpl := template.New("go_interface" + tplName)
+	tpl := template.New("" + tplName)
 	tpl.Funcs(NewTemplateFuncs())
 	tplGoInterface, err := ioutil.ReadFile(TEMPLATES_DIR + tplName)
 	helper.NoErr(err)
@@ -67,4 +63,14 @@ func buildFromTemplate(tplName string, gen *GenOut) string {
 	helper.NoErr(err)
 
 	return buffer.String()
+}
+
+func _getTemplate(tplName string) *template.Template {
+	tpl := template.New("" + tplName)
+	tpl.Funcs(NewTemplateFuncs())
+	tplGoInterface, err := ioutil.ReadFile(TEMPLATES_DIR + tplName)
+	helper.NoErr(err)
+	tpl, err = tpl.Parse(string(tplGoInterface))
+	helper.NoErr(err)
+	return tpl
 }

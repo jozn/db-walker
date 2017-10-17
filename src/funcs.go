@@ -1,6 +1,7 @@
 package src
 
 import (
+	"fmt"
 	"ms/xox/snaker"
 	"strings"
 	"text/template"
@@ -10,18 +11,18 @@ import (
 func NewTemplateFuncs() template.FuncMap {
 	return template.FuncMap{
 		//"colcount":       colcount,
-		//"colnames":       colnames,
-		//"colnamesquery":  colnamesquery,
+		"colnames":      colnames,
+		"colnamesquery": colnamesquery,
 		//"colprefixnames": colprefixnames,
-		//"colvals":        colvals,
-		//"fieldnames":     fieldnames,
+		"colvals":    colvals,
+		"fieldnames": fieldnames,
 		//"goparamlist":    goparamlist,
 		//"reniltype":      reniltype,
 		//"retype":         retype,
-		//"shortname":      shortname,
+		"shortname": shortname,
 		//"convext":        convext,
 		//"schema":         schemafn,
-		//"colname":        colname,
+		"colname":        colname,
 		//"hascolumn":      hascolumn,
 		//"hasfield":       hasfield,
 
@@ -171,63 +172,64 @@ func shortname(typ string, scopeConflicts ...interface{}) string {
 	return v
 }
 
-//// colnames creates a list of the column names found in fields, excluding any
-//// Field with Name contained in ignoreNames.
-////
-//// Used to present a comma separated list of column names, that can be used in
-//// a SELECT, or UPDATE, or other SQL clause requiring an list of identifiers
-//// (ie, "field_1, field_2, field_3, ...").
-//func colnames(fields []*Field, ignoreNames ...string) string {
-//	ignore := map[string]bool{}
-//	for _, n := range ignoreNames {
-//		ignore[n] = true
-//	}
+// colnames creates a list of the column names found in fields, excluding any
+// Field with Name contained in ignoreNames.
 //
-//	str := ""
-//	i := 0
-//	for _, f := range fields {
-//		if ignore[f.Name] {
-//			continue
-//		}
+// Used to present a comma separated list of column names, that can be used in
+// a SELECT, or UPDATE, or other SQL clause requiring an list of identifiers
+// (ie, "field_1, field_2, field_3, ...").
+func colnames(columns []*Column, ignoreNames ...string) string {
+	ignore := map[string]bool{}
+	for _, n := range ignoreNames {
+		ignore[n] = true
+	}
+
+	str := ""
+	i := 0
+	for _, f := range columns {
+		if ignore[f.ColumnName] {
+			continue
+		}
+
+		if i != 0 {
+			str = str + ", "
+		}
+		str = str + colname(f)
+		i++
+	}
+
+	return str
+}
+
+// colnamesquery creates a list of the column names in fields as a query and
+// joined by sep, excluding any Field with Name contained in ignoreNames.
 //
-//		if i != 0 {
-//			str = str + ", "
-//		}
-//		str = str + colname(f.Col)
-//		i++
-//	}
-//
-//	return str
-//}
-//
-//// colnamesquery creates a list of the column names in fields as a query and
-//// joined by sep, excluding any Field with Name contained in ignoreNames.
-////
-//// Used to create a list of column names in a WHERE clause (ie, "field_1 = $1
-//// AND field_2 = $2 AND ...") or in an UPDATE clause (ie, "field = $1, field =
-//// $2, ...").
-//func colnamesquery(fields []*Field, sep string, ignoreNames ...string) string {
-//	ignore := map[string]bool{}
-//	for _, n := range ignoreNames {
-//		ignore[n] = true
-//	}
-//
-//	str := ""
-//	i := 0
-//	for _, f := range fields {
-//		if ignore[f.Name] {
-//			continue
-//		}
-//
-//		if i != 0 {
-//			str = str + sep
-//		}
-//		str = str + colname(f.Col) + " = " + c.Loader.NthParam(i)
-//		i++
-//	}
-//
-//	return str
-//}
+// Used to create a list of column names in a WHERE clause (ie, "field_1 = $1
+// AND field_2 = $2 AND ...") or in an UPDATE clause (ie, "field = $1, field =
+// $2, ...").
+func colnamesquery(fields []*Column, sep string, ignoreNames ...string) string {
+	ignore := map[string]bool{}
+	for _, n := range ignoreNames {
+		ignore[n] = true
+	}
+
+	str := ""
+	i := 0
+	for _, f := range fields {
+		if ignore[f.ColumnName] {
+			continue
+		}
+
+		if i != 0 {
+			str = str + sep
+		}
+		str = str + colname(f) + " = " + "?" //c.Loader.NthParam(i)
+		i++
+	}
+
+	return str
+}
+
 //
 //// colprefixnames creates a list of the column names found in fields with the
 //// supplied prefix, excluding any Field with Name contained in ignoreNames.
@@ -257,62 +259,63 @@ func shortname(typ string, scopeConflicts ...interface{}) string {
 //	return str
 //}
 //
-//// colvals creates a list of value place holders for fields excluding any Field
-//// with Name contained in ignoreNames.
-////
-//// Used to present a comma separated list of column place holders, used in a
-//// SELECT or UPDATE statement (ie, "$1, $2, $3 ...").
-//func colvals(fields []*Field, ignoreNames ...string) string {
-//	ignore := map[string]bool{}
-//	for _, n := range ignoreNames {
-//		ignore[n] = true
-//	}
+// colvals creates a list of value place holders for fields excluding any Field
+// with Name contained in ignoreNames.
 //
-//	str := ""
-//	i := 0
-//	for _, f := range fields {
-//		if ignore[f.Name] {
-//			continue
-//		}
+// Used to present a comma separated list of column place holders, used in a
+// SELECT or UPDATE statement (ie, "$1, $2, $3 ...").
+func colvals(fields []*Column, ignoreNames ...string) string {
+	ignore := map[string]bool{}
+	for _, n := range ignoreNames {
+		ignore[n] = true
+	}
+
+	str := ""
+	i := 0
+	for _, f := range fields {
+		if ignore[f.ColumnName] {
+			continue
+		}
+
+		if i != 0 {
+			str = str + ", "
+		}
+		str = str + "?" //c.Loader.NthParam(i)
+		i++
+	}
+
+	return str
+}
+
+// fieldnames creates a list of field names from fields of the adding the
+// provided prefix, and excluding any Field with Name contained in ignoreNames.
 //
-//		if i != 0 {
-//			str = str + ", "
-//		}
-//		str = str + c.Loader.NthParam(i)
-//		i++
-//	}
-//
-//	return str
-//}
-//
-//// fieldnames creates a list of field names from fields of the adding the
-//// provided prefix, and excluding any Field with Name contained in ignoreNames.
-////
-//// Used to present a comma separated list of field names, ie in a Go statement
-//// (ie, "t.Field1, t.Field2, t.Field3 ...")
-//func fieldnames(fields []*Field, prefix string, ignoreNames ...string) string {
-//	ignore := map[string]bool{}
-//	for _, n := range ignoreNames {
-//		ignore[n] = true
-//	}
-//
-//	str := ""
-//	i := 0
-//	for _, f := range fields {
-//		if ignore[f.Name] {
-//			continue
-//		}
-//
-//		if i != 0 {
-//			str = str + ", "
-//		}
-//		str = str + prefix + "." + f.Name
-//		//fmt.Println(f.Name)
-//		i++
-//	}
-//
-//	return str
-//}
+// Used to present a comma separated list of field names, ie in a Go statement
+// (ie, "t.Field1, t.Field2, t.Field3 ...")
+func fieldnames(fields []*Column, prefix string, ignoreNames ...string) string {
+	ignore := map[string]bool{}
+	for _, n := range ignoreNames {
+		ignore[n] = true
+	}
+
+	str := ""
+	i := 0
+	for _, f := range fields {
+		if ignore[f.ColumnName] {
+			continue
+		}
+
+		if i != 0 {
+			str = str + ", "
+		}
+		str = str + prefix + "." + f.ColumnName
+		//fmt.Println(f.Name)
+		i++
+	}
+
+	return str
+}
+
 //
 //// colcount returns the 1-based count of fields, excluding any Field with Name
 //// contained in ignoreNames.
@@ -492,15 +495,17 @@ var goReservedNames = map[string]string{
 //	return s + n
 //}
 //
-//// colname returns the ColumnName of col, optionally escaping it if
-//// ArgType.EscapeColumnNames is toggled.
-//func colname(col *Column_Impl) string {
-//	if c.EscapeColumnNames {
-//		return c.Loader.Escape(ColumnEsc, col.ColumnName)
-//	}
-//
-//	return col.ColumnName
-//}
+// colname returns the ColumnName of col, optionally escaping it if
+// ArgType.EscapeColumnNames is toggled.
+func colname(col *Column) string {
+	if EscapeColumnNames {
+		//return c.Loader.Escape(ColumnEsc, col.ColumnName)
+		return fmt.Sprintf("`%s`", col.ColumnName)
+	}
+
+	return col.ColumnName
+}
+
 //
 //// hascolumn takes a list of fields and determines if field with the specified
 //// column name is in the list.

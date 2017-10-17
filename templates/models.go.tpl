@@ -13,7 +13,7 @@ type {{ .TableNameGo }} struct {
 {{- if .PrimaryKey }}
 	{{/* // xox fields */}}
 	_exists, _deleted bool
-{{ end }}
+{{ end -}}
 }
 /*
 := &{{ .TableNameGo }} {

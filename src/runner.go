@@ -14,6 +14,8 @@ var OutPutBuffer = &GenOut{
     PackageName: "x",
 }
 
+var EscapeColumnNames = false
+
 func Run() {
 	DB, err := sqlx.Connect("mysql", "root:123456@tcp(localhost:3306)/os?charset=utf8mb4")
 	DB.MapperFunc(func(s string) string { return s })
