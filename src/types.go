@@ -1,10 +1,12 @@
 package src
 
-type OutPut struct {
+type GenOut struct {
+	Tables               []Table
 	GeneratedPb          string
 	GeneratedPbConverter string
 }
 
+//dep
 type DataBase struct {
 	Tables []Table
 }

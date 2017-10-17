@@ -10,7 +10,7 @@ import (
 
 var IntRE = regexp.MustCompile(`^int(32|64)?$`)
 
-var OutPutBuffer = OutPut{}
+var OutPutBuffer = GenOut{}
 
 func Run() {
 	DB, err := sqlx.Connect("mysql", "root:123456@tcp(localhost:3306)/os?charset=utf8mb4")
