@@ -22,7 +22,7 @@ func NewTemplateFuncs() template.FuncMap {
 		"shortname": shortname,
 		//"convext":        convext,
 		//"schema":         schemafn,
-		"colname":        colname,
+		"colname": colname,
 		//"hascolumn":      hascolumn,
 		//"hasfield":       hasfield,
 

@@ -5,17 +5,13 @@ import (
 	"io/ioutil"
 	"ms/sun/helper"
 	"os"
+	"os/exec"
 	"text/template"
-)
-
-const (
-	TEMPLATES_DIR = `C:\Go\_gopath\src\ms\snake\templates\`
-	OUTPUT_DIR    = `C:\Go\_gopath\src\ms\snake\play\`
 )
 
 func build(gen *GenOut) {
 
-    writeOutput("zz_xo.go", buildFromTemplate("xo.go.tpl", gen))
+	writeOutput("zz_xo.go", buildFromTemplate("xo.go.tpl", gen))
 	writeOutput("models.go", buildFromTemplate("models.go.tpl", gen))
 	genTablesOrma("orm.go.tpl", gen)
 
@@ -30,6 +26,10 @@ func build(gen *GenOut) {
 	writeOutput("PBFlatTypes.java", buildFromTemplate("PBFlatTypes.java", gen))
 	writeOutput("flat.go", buildFromTemplate("flat.tgo", gen))
 	*/
+	e1 := exec.Command("gofmt", "-w", OUTPUT_DIR).Run()
+	e2 := exec.Command("goimports", "-w", OUTPUT_DIR).Run()
+	helper.NoErr(e1)
+	helper.NoErr(e2)
 }
 
 func genTablesOrma(tplName string, gen *GenOut) {

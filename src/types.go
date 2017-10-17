@@ -1,7 +1,7 @@
 package src
 
 type GenOut struct {
-    PackageName          string
+	PackageName          string
 	Tables               []*Table
 	GeneratedPb          string
 	GeneratedPbConverter string

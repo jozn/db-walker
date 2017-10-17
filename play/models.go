@@ -2,24 +2,25 @@ package x
 
 // chat 'Chat'.
 type Chat struct {
-	ChatKey string        
-	RoomKey string        
-	RoomTypeEnumId int        
-	UserId int        
-	PeerUserId int        
-	GroupId int        
-	CreatedSe int        
-	StartMessageIdFrom int        
-	LastSeenMessageId int        
-	UpdatedMs int        
-	LastMessageId int  //just direct      
-	LastDeletedMessageId int        
-	LastSeqSeen int        
-	LastSeqDelete int        
-	CurrentSeq int  //just for peer to peer      
-	
+	ChatKey              string
+	RoomKey              string
+	RoomTypeEnumId       int
+	UserId               int
+	PeerUserId           int
+	GroupId              int
+	CreatedSe            int
+	StartMessageIdFrom   int
+	LastSeenMessageId    int
+	UpdatedMs            int
+	LastMessageId        int //just direct
+	LastDeletedMessageId int
+	LastSeqSeen          int
+	LastSeqDelete        int
+	CurrentSeq           int //just for peer to peer
+
 	_exists, _deleted bool
 }
+
 /*
 := &Chat {
 	ChatKey: "",
@@ -40,14 +41,15 @@ type Chat struct {
 */
 // comments 'Comments'.
 type Comments struct {
-	Id int        
-	UserId int        
-	PostId int        
-	Text string        
-	CreatedTime int        
-	
+	Id          int
+	UserId      int
+	PostId      int
+	Text        string
+	CreatedTime int
+
 	_exists, _deleted bool
 }
+
 /*
 := &Comments {
 	Id: 0,
@@ -56,4 +58,3 @@ type Comments struct {
 	Text: "",
 	CreatedTime: 0,
 */
-
