@@ -1,9 +1,9 @@
 package main
 
 import (
-    "ms/snake/src"
+	"ms/snake/src"
 )
 
-func main()  {
-    src.Run()
+func main() {
+	src.Run()
 }

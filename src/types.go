@@ -1,5 +1,10 @@
 package src
 
+type OutPut struct {
+	GeneratedPb          string
+	GeneratedPbConverter string
+}
+
 type DataBase struct {
 	Tables []Table
 }
@@ -8,7 +13,7 @@ type Table struct {
 	TableName       string
 	Columns         []*Column
 	HasPrimaryKey   bool
-	PrimaryKey      Column
+	PrimaryKey      *Column
 	DataBase        string //or schema in PG or tablesapce in cassandra
 	Seq             int
 	IsAutoIncrement bool
@@ -25,6 +30,7 @@ type Column struct {
 	Comment       string
 	ColumnNameOut string
 	GoTypeOut     string
+	GoDefaultOut  string
 	JavaTypeOut   string
 	PBTypeOut     string
 }

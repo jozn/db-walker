@@ -5,7 +5,12 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"ms/sun/helper"
+	"regexp"
 )
+
+var IntRE = regexp.MustCompile(`^int(32|64)?$`)
+
+var OutPutBuffer = OutPut{}
 
 func Run() {
 	DB, err := sqlx.Connect("mysql", "root:123456@tcp(localhost:3306)/os?charset=utf8mb4")
@@ -15,9 +20,9 @@ func Run() {
 
 	tables, _ := My_LoadTables(DB, "os", "BASE TABLE")
 
-	for _, t := range tables {
-		t.Columns, _ = My_LoadTableColumns(DB, t.DataBase, t.TableName)
-		t.Indexes, _ = MyTableIndexes(DB, t.DataBase, t.TableName, t)
+	for _, table := range tables {
+		table.Columns, _ = My_LoadTableColumns(DB, table.DataBase, table.TableName, table)
+		table.Indexes, _ = MyTableIndexes(DB, table.DataBase, table.TableName, table)
 	}
 
 	helper.PertyPrint(tables)

@@ -35,9 +35,12 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 
 	for i, r := range res2 {
 		t := &Table{
-			TableName: r.TABLE_NAME,
-			DataBase:  schema,
-			Seq:       i,
+			TableName:     r.TABLE_NAME,
+			DataBase:      schema,
+			Seq:           i,
+			TableNameGo:   SnakeToCamel(r.TABLE_NAME),
+			TableNameJava: SnakeToCamel(r.TABLE_NAME),
+			TableNamePB:   "PB_" + SnakeToCamel(r.TABLE_NAME),
 		}
 		if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true
@@ -50,7 +53,7 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 }
 
 // My_LoadTableColumns runs a custom query, returning results as Column.
-func My_LoadTableColumns(db *sqlx.DB, schema string, table string) (res []*Column, err error) {
+func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Column, err error) {
 	var rows = []struct {
 		ORDINAL_POSITION int
 		COLUMN_NAME      string
@@ -68,16 +71,28 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, table string) (res []*Colum
 		`ORDER BY ordinal_position ASC`
 
 	// run query
-	XOLogDebug(sqlstr, schema, table)
+	XOLogDebug(sqlstr, schema, tableName)
 
-	err = db.Unsafe().Select(&rows, sqlstr, schema, table)
+	err = db.Unsafe().Select(&rows, sqlstr, schema, tableName)
 	helper.NoErr(err)
 	//fmt.Println("Mysql loader - load tables: ", rows)
 	for _, r := range rows {
+		_, _, gotype := sqlTypeToGoType(r.COLUMN_TYPE, false)
 		t := &Column{
-			ColumnName: r.COLUMN_NAME,
-			Seq:        r.ORDINAL_POSITION,
-			Comment:    r.COLUMN_COMMENT,
+			ColumnName:    r.COLUMN_NAME,
+			Seq:           r.ORDINAL_POSITION,
+			Comment:       r.COLUMN_COMMENT,
+			ColumnNameOut: r.COLUMN_NAME,
+			SqlType:       r.COLUMN_TYPE,
+			GoTypeOut:     gotype,
+			GoDefaultOut:  go_datatype_to_defualt_go_type(gotype),
+			JavaTypeOut:   go_to_java_type(gotype),
+			PBTypeOut:     (gotype),
+		}
+
+		if strings.ToUpper(r.COLUMN_KEY) == "PRI" {
+			table.HasPrimaryKey = true
+			table.PrimaryKey = t
 		}
 		//fmt.Println("Mysql loader - load tables: ))))))) ", t)
 		res = append(res, t)
