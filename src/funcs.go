@@ -429,7 +429,7 @@ func goparamlist(fields []*Column, addPrefix bool, addType bool, ignoreNames ...
 
 		// add the go type
 		if addType {
-			s += " " + f.GoTypeOut//retype(f.SqlType)
+			s += " " + f.GoTypeOut //retype(f.SqlType)
 		}
 
 		// add to vals

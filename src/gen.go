@@ -11,25 +11,21 @@ import (
 
 func build(gen *GenOut) {
 
-	writeOutput("zz_xo.go", buildFromTemplate("xo.go.tpl", gen))
-	writeOutput("models.go", buildFromTemplate("models.go.tpl", gen))
-	writeOutput("cache.go", buildFromTemplate("cache.go.tpl", gen))
-	writeOutput("event.go", buildFromTemplate("event.go.tpl", gen))
-	writeOutput("manual.go", buildFromTemplate("manual.go", gen))
-	writeOutput("index.go", buildFromTemplate("index.go.tpl", gen))
+	writeOutput("z_xo.go", buildFromTemplate("xo.go.tpl", gen))
+	writeOutput("z_models.go", buildFromTemplate("models.go.tpl", gen))
+	writeOutput("z_cache.go", buildFromTemplate("cache.go.tpl", gen))
+	writeOutput("z_event.go", buildFromTemplate("event.go.tpl", gen))
+	writeOutput("z_manual.go", buildFromTemplate("manual.go", gen))
+	writeOutput("z_index.go", buildFromTemplate("index.go.tpl", gen))
+	writeOutput("z_cache_secondary_index.go", buildFromTemplate("cache_secondary_index.go.tpl", gen))
+	writeOutput("J.java", buildFromTemplate("J.java", gen))
+
 	genTablesOrma("orm.go.tpl", gen)
 
-	/*OutGoRPCsStr := buildFromTemplate("rpc.tgo", gen)
-	writeOutput("pb__gen_ant.go", OutGoRPCsStr)
+	PtMsgdef, converter := Gen_ProtosForTables(gen.Tables)
+	writeOutput("TablePBCon.go", converter)
+	ioutil.WriteFile(OUTPUT_PROTO_DIR+"pb_tables.proto", []byte(PtMsgdef), os.ModeType)
 
-	OutGoRPCsEmptyStr := buildFromTemplate("rpc_empty_imple.tgo", gen)
-	writeOutput("pb__gen_ant_empty.go", OutGoRPCsEmptyStr)
-
-	writeOutput("pb__gen_enum.proto", buildFromTemplate("enums.proto", gen))
-	writeOutput("RPC_HANDLERS.java", buildFromTemplate("RPC_HANDLERS.java", gen))
-	writeOutput("PBFlatTypes.java", buildFromTemplate("PBFlatTypes.java", gen))
-	writeOutput("flat.go", buildFromTemplate("flat.tgo", gen))
-	*/
 	e1 := exec.Command("gofmt", "-w", OUTPUT_DIR).Run()
 	e2 := exec.Command("goimports", "-w", OUTPUT_DIR).Run()
 	helper.NoErr(e1)
@@ -43,7 +39,7 @@ func genTablesOrma(tplName string, gen *GenOut) {
 		buffer := bytes.NewBufferString("")
 		err := tpl.Execute(buffer, table)
 		helper.NoErr(err)
-		writeOutput("z_"+table.TableName+".go", buffer.String())
+		writeOutput("zz_"+table.TableName+".go", buffer.String())
 	}
 
 }

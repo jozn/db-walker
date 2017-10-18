@@ -26,7 +26,7 @@ type ProtoMessageFieldDef struct {
 	Repeat  bool
 }
 
-func Gen_ProtosForTables(tbls []*Table) {
+func Gen_ProtosForTables(tbls []*Table) (protoMsgDefs, protoConv string) {
 	filePB := ProtoFile{FileName: "pb_tables"}
 
 	for _, t := range tbls {
@@ -73,6 +73,7 @@ func Gen_ProtosForTables(tbls []*Table) {
 	OutPutBuffer.GeneratedPbConverter = outConv.String()
 	//return outConv.String()
 	//fmt.Println("size of PB (tabels) : ", len(c.Loader.CacheTables))
+	return OutPutBuffer.GeneratedPb, OutPutBuffer.GeneratedPbConverter
 }
 
 var GRPC_TYOPES_MAP = map[string]string{ // go type to => PB types
