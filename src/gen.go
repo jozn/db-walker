@@ -13,6 +13,10 @@ func build(gen *GenOut) {
 
 	writeOutput("zz_xo.go", buildFromTemplate("xo.go.tpl", gen))
 	writeOutput("models.go", buildFromTemplate("models.go.tpl", gen))
+	writeOutput("cache.go", buildFromTemplate("cache.go.tpl", gen))
+	writeOutput("event.go", buildFromTemplate("event.go.tpl", gen))
+	writeOutput("manual.go", buildFromTemplate("manual.go", gen))
+	writeOutput("index.go", buildFromTemplate("index.go.tpl", gen))
 	genTablesOrma("orm.go.tpl", gen)
 
 	/*OutGoRPCsStr := buildFromTemplate("rpc.tgo", gen)

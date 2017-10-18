@@ -129,6 +129,7 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 		i := &Index{
 			IndexName: r.INDEX_NAME,
 			IsUnique:  r.IS_UNIQUE,
+			//FuncNameOut: "Get" + table.TableNameGo + "By" + r.INDEX_NAME,
 		}
 		if strings.ToUpper(r.INDEX_NAME) == "PRIMARY" {
 			i.IsPrimary = true
@@ -156,8 +157,24 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 		for _, c := range rs {
 			i.Columns = append(i.Columns, table.GetColumnByName(c.COLUMN_NAME))
 		}
+		i.FuncNameOut = indexName(i, table)
 		res = append(res, i)
 	}
 
 	return res, nil
+}
+
+func indexName(index *Index, table *Table) string {
+	name := ""
+	if len(index.Columns) == 1 {
+		name = "Get" + table.TableNameGo + "By" + index.Columns[0].ColumnName
+	} else {
+		arr := []string{}
+		for _, col := range table.Columns {
+			arr = append(arr, col.ColumnName)
+		}
+		name = "Get" + table.TableNameGo + "By" + strings.Join(arr, "And")
+	}
+
+	return name
 }

@@ -22,7 +22,7 @@ type Table struct {
 	Comment         string
 	IsAutoIncrement bool
 	Indexes         []*Index
-	TableNameOut    string //with table "`ms`.`post`"
+	TableNameOut    string //with table "`ms`.`post`" //todo change the naeme to TableSchemeOut
 	TableNameGo     string
 	TableNameJava   string
 	TableNamePB     string
@@ -54,11 +54,13 @@ type PrimaryKey struct {
 }
 
 type Index struct {
-	IndexName string // index_name
-	IsUnique  bool   // is_unique
-	IsPrimary bool   // is_primary
-	SeqNo     int    // seq_no
-	Columns   []*Column
+	FuncNameOut string // index_name
+	IndexName   string // index_name
+	IsUnique    bool   // is_unique
+	IsPrimary   bool   // is_primary
+	SeqNo       int    // seq_no
+	Columns     []*Column
+	Table       *Table
 }
 
 // IndexColumn represents index column info.
