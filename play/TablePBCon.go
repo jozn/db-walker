@@ -66,3 +66,26 @@ func PBConvPB_comments_To_comments ( o *comments) *PB_comments {
     return n
 }
 */
+/*
+func PBConvPB__trigger_log_To_trigger_log( o *PB_trigger_log) *trigger_log {
+     n := &trigger_log{
+      Id: int ( o.Id ),
+      TableName: string ( o.TableName ),
+      ChangeType: string ( o.ChangeType ),
+      TargetId: int ( o.TargetId ),
+      TargetStr: string ( o.TargetStr ),
+    }
+    return n
+}
+
+func PBConvPB_trigger_log_To_trigger_log ( o *trigger_log) *PB_trigger_log {
+     n := &PB_trigger_log{
+      Id: int64 ( o.Id ),
+      TableName: string ( o.TableName ),
+      ChangeType: string ( o.ChangeType ),
+      TargetId: int64 ( o.TargetId ),
+      TargetStr: string ( o.TargetStr ),
+    }
+    return n
+}
+*/

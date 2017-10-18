@@ -27,4 +27,12 @@ public class J {
 		public int CreatedTime;
 	}
 
+	public static class TriggerLog {//oridnal: 2
+		public int Id;
+		public String TableName;
+		public String ChangeType;
+		public int TargetId;
+		public String TargetStr;
+	}
+
 }

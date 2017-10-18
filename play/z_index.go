@@ -93,3 +93,47 @@ func GetCommentsByPostId(db sqlx.DB, postId int) ([]*Comments, error) {
 
 	return res, nil
 }
+
+// GetTriggerLogById Generated from index 'PRIMARY' -- retrieves a row from 'os.trigger_log' as a TriggerLog.
+func GetTriggerLogById(db sqlx.DB, id int) (*TriggerLog, error) {
+	var err error
+
+	const sqlstr = `SELECT * ` +
+		`FROM os.trigger_log ` +
+		`WHERE Id = ?`
+
+	XOLog(sqlstr, id)
+	tl := TriggerLog{
+		_exists: true,
+	}
+
+	err = db.Get(&tl, sqlstr, id)
+	if err != nil {
+		XOLogErr(err)
+		return nil, err
+	}
+
+	OnTriggerLog_LoadOne(&tl)
+
+	return &tl, nil
+}
+
+// GetTriggerLogById Generated from index 'Id' -- retrieves a row from 'os.trigger_log' as a TriggerLog.
+func GetTriggerLogById(db sqlx.DB, id int) ([]*TriggerLog, error) {
+	var err error
+
+	const sqlstr = `SELECT * ` +
+		`FROM os.trigger_log ` +
+		`WHERE Id = ?`
+
+	XOLog(sqlstr, id)
+	res := []*TriggerLog{}
+	err = db.Select(&res, sqlstr, id)
+	if err != nil {
+		XOLogErr(err)
+		return res, err
+	}
+	OnTriggerLog_LoadMany(res)
+
+	return res, nil
+}

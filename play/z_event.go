@@ -52,3 +52,27 @@ func OnComments_LoadMany(rows []*Comments) {
 		RowCache.Set("Comments:"+strconv.Itoa(row.Id), row, time.Hour*0)
 	}
 }
+
+//TriggerLog Events
+
+func OnTriggerLog_AfterInsert(row *TriggerLog) {
+	RowCache.Set("TriggerLog:"+strconv.Itoa(row.Id), row, time.Hour*0)
+}
+
+func OnTriggerLog_AfterUpdate(row *TriggerLog) {
+	RowCache.Set("TriggerLog:"+strconv.Itoa(row.Id), row, time.Hour*0)
+}
+
+func OnTriggerLog_AfterDelete(row *TriggerLog) {
+	RowCache.Delete("TriggerLog:" + strconv.Itoa(row.Id))
+}
+
+func OnTriggerLog_LoadOne(row *TriggerLog) {
+	RowCache.Set("TriggerLog:"+strconv.Itoa(row.Id), row, time.Hour*0)
+}
+
+func OnTriggerLog_LoadMany(rows []*TriggerLog) {
+	for _, row := range rows {
+		RowCache.Set("TriggerLog:"+strconv.Itoa(row.Id), row, time.Hour*0)
+	}
+}

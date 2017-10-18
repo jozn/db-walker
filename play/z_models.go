@@ -58,3 +58,22 @@ type Comments struct {
 	Text: "",
 	CreatedTime: 0,
 */
+// trigger_log 'TriggerLog'.
+type TriggerLog struct {
+	Id         int
+	TableName  string
+	ChangeType string
+	TargetId   int
+	TargetStr  string
+
+	_exists, _deleted bool
+}
+
+/*
+:= &TriggerLog {
+	Id: 0,
+	TableName: "",
+	ChangeType: "",
+	TargetId: 0,
+	TargetStr: "",
+*/

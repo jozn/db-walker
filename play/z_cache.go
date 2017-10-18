@@ -68,3 +68,35 @@ func (c _StoreImpl) PreLoadCommentsByIds(ids []int) {
 }
 
 // yes 222 int
+
+func (c _StoreImpl) GetTriggerLogById(Id int) (*TriggerLog, bool) {
+	o, ok := RowCache.Get("TriggerLog:" + strconv.Itoa(Id))
+	if ok {
+		if obj, ok := o.(*TriggerLog); ok {
+			return obj, true
+		}
+	}
+	obj2, err := TriggerLogById(base.DB, Id)
+	if err == nil {
+		return obj2, true
+	}
+	XOLogErr(err)
+	return nil, false
+}
+
+func (c _StoreImpl) PreLoadTriggerLogByIds(ids []int) {
+	not_cached := make([]int, 0, len(ids))
+
+	for _, id := range ids {
+		_, ok := RowCache.Get("TriggerLog:" + strconv.Itoa(id))
+		if !ok {
+			not_cached = append(not_cached, id)
+		}
+	}
+
+	if len(not_cached) > 0 {
+		NewTriggerLog_Selector().Id_In(not_cached).GetRows(base.DB)
+	}
+}
+
+// yes 222 int

@@ -37,6 +37,7 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 		t := &Table{
 			TableName:     r.TABLE_NAME,
 			TableNameOut:  fmt.Sprintf("%s.%s", schema, r.TABLE_NAME), //fmt.Sprintf("`%s`.`%s`", schema, r.TABLE_NAME),
+			TableNameSql:  r.TABLE_NAME,                               //fmt.Sprintf("`%s`.`%s`", schema, r.TABLE_NAME),
 			DataBase:      schema,
 			Seq:           i,
 			TableNameGo:   SnakeToCamel(r.TABLE_NAME),

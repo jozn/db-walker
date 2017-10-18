@@ -23,6 +23,7 @@ type Table struct {
 	IsAutoIncrement bool
 	Indexes         []*Index
 	TableNameOut    string //with table "`ms`.`post`" //todo change the naeme to TableSchemeOut
+	TableNameSql    string //"post"
 	TableNameGo     string
 	TableNameJava   string
 	TableNamePB     string

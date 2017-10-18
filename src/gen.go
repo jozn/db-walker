@@ -19,6 +19,7 @@ func build(gen *GenOut) {
 	writeOutput("z_index.go", buildFromTemplate("index.go.tpl", gen))
 	writeOutput("z_cache_secondary_index.go", buildFromTemplate("cache_secondary_index.go.tpl", gen))
 	writeOutput("J.java", buildFromTemplate("J.java", gen))
+	writeOutput("triggers.sql", buildFromTemplate("triggers.sql", gen))
 
 	genTablesOrma("orm.go.tpl", gen)
 
