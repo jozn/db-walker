@@ -44,7 +44,8 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 			TableNameJava: SnakeToCamel(r.TABLE_NAME),
 			TableNamePB:   "PB_" + SnakeToCamel(r.TABLE_NAME),
 			ShortName:     shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
-		}
+		    NeedTrigger: needTriggerTable(r.TABLE_NAME),
+			}
 		if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true
 		}

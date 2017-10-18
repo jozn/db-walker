@@ -14,6 +14,17 @@ func skipTableModel(table string) bool {
 	return false
 }
 
+var triggerMap = []string{"user","chat","post","comment", "tags"}
+func needTriggerTable(table string) bool {
+    t := strings.ToLower(table)
+    for _, ent := range triggerMap {
+        if ent == t {
+            return true
+        }
+    }
+    return false
+}
+
 // KnownTypeMap is the collection of known Go types.
 var KnownTypeMap = map[string]bool{
 	"bool":        true,

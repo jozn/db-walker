@@ -28,6 +28,7 @@ type Table struct {
 	TableNameJava   string
 	TableNamePB     string
 	ShortName       string
+	NeedTrigger     bool
 }
 
 type Column struct {

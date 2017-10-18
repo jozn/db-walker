@@ -143,3 +143,10 @@ func go_datatype_to_defualt_go_type(typ string) string {
 	}
 	return "UNKNOWN"
 }
+
+func ms_trigger_colmun(colmunGoType string) (columnName string)  {
+    if colmunGoType == "int" {
+        return "TargetId"
+    }
+    return "TargetStr"
+}

@@ -1,15 +1,57 @@
 {{range .Tables }}
-{{if .PrimaryKey}}
-delimiter |
-CREATE TRIGGER {{.TableName}}_Create AFTER INSERT ON {{.TableNameSql}}
+{{- if .PrimaryKey}}
+{{- $TargetCol := ( ms_trigger_colmun .PrimaryKey.GoTypeOut ) }}
+################################ {{.TableNameGo}} ######################################
+{{ if .NeedTrigger}}
+delimiter $$
+{{- else}}
+/* #### delimiter $$
+{{- end}}
+{{ $triggerName := (printf "%s%s" .TableName  "_OnCreateLogger") -}}
+DROP TRIGGER IF EXISTS {{ $triggerName }} $$
+CREATE TRIGGER {{ $triggerName }} AFTER INSERT ON {{.TableNameSql}}
   FOR EACH ROW
   BEGIN
-    INSERT INTO trigger_log (TableName,ChangeType,TargetId) VALUES ("{{.TableNameSql}}","insert",NEW.{{.PrimaryKey.ColumnName}});
-#     DELETE FROM test3 WHERE a3 = NEW.a1;
-#     UPDATE test4 SET b4 = b4 + 1 WHERE a4 = NEW.a1;
+    INSERT INTO trigger_log (ModelName,ChangeType,{{ $TargetCol }},CreatedSe) VALUES ("{{.TableNameGo}}","INSERT",NEW.{{.PrimaryKey.ColumnName}}, UNIX_TIMESTAMP(NOW()) );
   END;
-|
-delimiter ;
-{{end}}
+$$
 
-{{end}}
+{{ $triggerName := (printf "%s%s" .TableName  "_OnUpdateLogger") -}}
+DROP TRIGGER IF EXISTS {{ $triggerName }} $$
+CREATE TRIGGER {{ $triggerName }} AFTER UPDATE ON {{.TableNameSql}}
+  FOR EACH ROW
+  BEGIN
+  	INSERT INTO trigger_log (ModelName,ChangeType,{{ $TargetCol }},CreatedSe) VALUES ("{{.TableNameGo}}","UPDATE",NEW.{{.PrimaryKey.ColumnName}}, UNIX_TIMESTAMP(NOW()));
+  END;
+$$
+
+{{ $triggerName := (printf "%s%s" .TableName  "_OnDeleteLogger") -}}
+DROP TRIGGER IF EXISTS {{ $triggerName }} $$
+CREATE TRIGGER {{ $triggerName }} AFTER DELETE ON {{.TableNameSql}}
+  FOR EACH ROW
+  BEGIN
+   	INSERT INTO trigger_log (ModelName,ChangeType,{{ $TargetCol }},CreatedSe) VALUES ("{{.TableNameGo}}","DELETE",OLD.{{.PrimaryKey.ColumnName}}, UNIX_TIMESTAMP(NOW()));
+  END;
+$$
+
+{{ if .NeedTrigger}}
+delimiter ;
+{{- else}}
+ #### delimiter ;*/
+{{- end}}
+
+{{- end }}
+{{- end }}
+
+###############################################################################################
+################################## Delete of all triggers #####################################
+/*
+{{range .Tables }}
+{{- if .PrimaryKey}}
+### {{.TableNameGo}} ##
+DROP TRIGGER IF EXISTS {{ .TableName }}_OnCreateLogger ;
+DROP TRIGGER IF EXISTS {{ .TableName }}_OnUpdateLogger ;
+DROP TRIGGER IF EXISTS {{ .TableName }}_OnDeleteLogger ;
+{{- end }}
+{{- end }}
+*/

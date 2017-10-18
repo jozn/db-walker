@@ -38,6 +38,7 @@ func NewTemplateFuncs() template.FuncMap {
 		"ms_question_mark":     ms_question_mark,
 		"ms_col_comment_json":  ms_col_comment_json,
 		"ms_col_comment_raw":   ms_col_comment_raw,
+		"ms_trigger_colmun":   ms_trigger_colmun,
 		//"to_java_type":                to_java_type,
 		//"datatype_to_defualt_go_type": datatype_to_defualt_go_type,
 	}
