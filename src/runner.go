@@ -17,7 +17,7 @@ func Run() {
 	helper.NoErr(err)
 
 	//OutPutBuffer := &GenOut{}
-	OutPutBuffer.Tables, _ = My_LoadTables(DB, "os", "BASE TABLE")
+	OutPutBuffer.Tables, _ = My_LoadTables(DB, DATABASE, "BASE TABLE")
 
 	for _, table := range OutPutBuffer.Tables {
 		table.Columns, _ = My_LoadTableColumns(DB, table.DataBase, table.TableName, table)

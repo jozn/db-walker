@@ -168,13 +168,15 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 func indexName(index *Index, table *Table) string {
 	name := ""
 	if len(index.Columns) == 1 {
-		name = "Get" + table.TableNameGo + "By" + index.Columns[0].ColumnName
+		//name = "Get" + table.TableNameGo + "By" + index.Columns[0].ColumnName
+		name = "" + table.TableNameGo + "By" + index.Columns[0].ColumnName
 	} else {
 		arr := []string{}
 		for _, col := range table.Columns {
 			arr = append(arr, col.ColumnName)
 		}
-		name = "Get" + table.TableNameGo + "By" + strings.Join(arr, "And")
+		//name = "Get" + table.TableNameGo + "By" + strings.Join(arr, "And")
+		name = "" + table.TableNameGo + "By" + strings.Join(arr, "And")
 	}
 
 	return name

@@ -1,6 +1,6 @@
-package {{.PackageName}}
+package x
 
-{{range .Tables }}
+{{range . }}
 {{- if .Comment -}}
 // {{ .Comment }}
 {{- else -}}
