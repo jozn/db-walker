@@ -7,7 +7,7 @@ import (
 
 {{range .Tables}}
 	{{- $short := .ShortName}}
-	{{- $table := .TableNameOut}}
+	{{- $table := .TableSchemeOut}}
 	{{- $model := .TableNameGo -}}
 
 	{{range .Indexes}}

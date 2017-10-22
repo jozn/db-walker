@@ -15,7 +15,7 @@ import (
 )
 
 {{- $short := .ShortName}}// (shortname .TableNameGo "err" "res" "sqlstr" "db" "XOLog") -}}
-{{- $table := .TableNameOut }}//(schema .Schema .Table.TableName) -}}
+{{- $table := .TableSchemeOut }}//(schema .Schema .Table.TableName) -}}
 {{- $typ := .TableNameGo}}// .TableNameGo}}
 {{- if .Comment -}}
 // {{ .Comment }}

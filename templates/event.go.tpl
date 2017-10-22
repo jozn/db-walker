@@ -8,7 +8,7 @@ import (
 {{range .Tables}}
 
 {{- $short := .ShortName}}
-{{- $table := .TableNameOut}}
+{{- $table := .TableSchemeOut}}
 {{- $typ := .TableNameGo }}
 {{- $_ := "" }}
 

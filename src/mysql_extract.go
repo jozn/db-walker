@@ -35,17 +35,17 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 
 	for i, r := range res2 {
 		t := &Table{
-			TableName:     r.TABLE_NAME,
-			TableNameOut:  fmt.Sprintf("%s.%s", schema, r.TABLE_NAME), //fmt.Sprintf("`%s`.`%s`", schema, r.TABLE_NAME),
-			TableNameSql:  r.TABLE_NAME,                               //fmt.Sprintf("`%s`.`%s`", schema, r.TABLE_NAME),
-			DataBase:      schema,
-			Seq:           i,
-			TableNameGo:   SnakeToCamel(r.TABLE_NAME),
-			TableNameJava: SnakeToCamel(r.TABLE_NAME),
-			TableNamePB:   "PB_" + SnakeToCamel(r.TABLE_NAME),
-			ShortName:     shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
-		    NeedTrigger: needTriggerTable(r.TABLE_NAME),
-			}
+			TableName:      r.TABLE_NAME,
+			TableSchemeOut: fmt.Sprintf("%s.%s", schema, r.TABLE_NAME), //fmt.Sprintf("`%s`.`%s`", schema, r.TABLE_NAME),
+			TableNameSql:   r.TABLE_NAME,                               //fmt.Sprintf("`%s`.`%s`", schema, r.TABLE_NAME),
+			DataBase:       schema,
+			Seq:            i,
+			TableNameGo:    SingularizeIdentifier(r.TABLE_NAME),         //,SnakeToCamel(r.TABLE_NAME),
+			TableNameJava:  SingularizeIdentifier(r.TABLE_NAME),         //SnakeToCamel(r.TABLE_NAME),
+			TableNamePB:    "PB_" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
+			ShortName:      shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
+			NeedTrigger:    needTriggerTable(r.TABLE_NAME),
+		}
 		if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true
 		}

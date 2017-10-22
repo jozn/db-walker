@@ -15,12 +15,12 @@ import (
 
 {{range .Indexes}}
 	{{ if .IsPrimary}}
-		// {{ .FuncNameOut }} Generated from index '{{ .IndexName }}' -- retrieves a row from '{{ $table.TableNameOut }}' as a {{ $table.TableNameGo  }}.
+		// {{ .FuncNameOut }} Generated from index '{{ .IndexName }}' -- retrieves a row from '{{ $table.TableSchemeOut }}' as a {{ $table.TableNameGo  }}.
 		func {{ .FuncNameOut }}(db *sqlx.DB {{ goparamlist .Columns true true }}) ({{ if not .IsUnique }}[]{{ end }}*{{ $table.TableNameGo }}, error) {
 			var err error
 
 			const sqlstr = `SELECT * ` +
-				`FROM {{ $table.TableNameOut }} ` +
+				`FROM {{ $table.TableSchemeOut }} ` +
 				`WHERE {{ colnamesquery .Columns " AND " }}`
 
 			XOLog(sqlstr{{ goparamlist .Columns true false }})

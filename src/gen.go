@@ -5,13 +5,13 @@ import (
 	"io/ioutil"
 	"ms/sun/helper"
 	"os"
+	"os/exec"
 	"text/template"
-    "os/exec"
 )
 
 func build(gen *GenOut) {
 
-    genModels(gen)
+	genModels(gen)
 	writeOutput("z_xo.go", buildFromTemplate("xo.go.tpl", gen))
 	//writeOutput("z_models.go", buildFromTemplate("models.go.tpl", gen))
 	writeOutput("z_cache.go", buildFromTemplate("cache.go.tpl", gen))
@@ -67,19 +67,19 @@ func buildFromTemplate(tplName string, gen *GenOut) string {
 	return buffer.String()
 }
 
-func genModels(gen *GenOut){
-    tpl := _getTemplate("models.go.tpl")
-    tables := []*Table{}
-    for _, t := range gen.Tables {
-        if !skipTableModel(t.TableNameSql) {
-            tables =append(tables,t)
-        }
-    }
+func genModels(gen *GenOut) {
+	tpl := _getTemplate("models.go.tpl")
+	tables := []*Table{}
+	for _, t := range gen.Tables {
+		if !skipTableModel(t.TableNameSql) {
+			tables = append(tables, t)
+		}
+	}
 
-    buffer := bytes.NewBufferString("")
-    err := tpl.Execute(buffer, tables)
-    helper.NoErr(err)
-    writeOutput("z_models.go", buffer.String())
+	buffer := bytes.NewBufferString("")
+	err := tpl.Execute(buffer, tables)
+	helper.NoErr(err)
+	writeOutput("z_models.go", buffer.String())
 }
 
 func _getTemplate(tplName string) *template.Template {

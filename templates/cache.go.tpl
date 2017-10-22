@@ -8,7 +8,7 @@ import (
 {{range .Tables}}
 	{{if .PrimaryKey}}
 		{{- $short := .ShortName}}
-		{{- $table := .TableNameOut}}
+		{{- $table := .TableSchemeOut}}
 		{{- $typ := .TableNameGo }}
 		{{- $_ := "" }}
 		{{- $id := (.PrimaryKey.ColumnName) }}
