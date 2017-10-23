@@ -31,7 +31,7 @@ func Gen_ProtosForTables(tbls []*Table) (protoMsgDefs, protoConv string) {
 
 	for _, t := range tbls {
 		tpb := ProtoMessageDef{
-			MessageName:      t.TableName,
+			MessageName:      t.TableNamePB,
 			IsTableNotInline: skipTableModel(t.TableName),
 		}
 
