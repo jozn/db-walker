@@ -22,16 +22,20 @@ func build(gen *GenOut) {
 	writeOutput("J.java", buildFromTemplate("J.java", gen))
 	writeOutput("triggers.sql", buildFromTemplate("triggers.sql", gen))
 
+	writeOutputConst("tables.go", buildFromTemplate("const.go.tpl", gen))
+
 	genTablesOrma("orm.go.tpl", gen)
 
 	PtMsgdef, converter := Gen_ProtosForTables(gen.Tables)
 	writeOutput("TablePBCon.go", converter)
 	ioutil.WriteFile(OUTPUT_PROTO_DIR+"pb_tables.proto", []byte(PtMsgdef), os.ModeType)
 
-	e1 := exec.Command("gofmt", "-w", OUTPUT_DIR).Run()
-	e2 := exec.Command("goimports", "-w", OUTPUT_DIR).Run()
-	helper.NoErr(e1)
-	helper.NoErr(e2)
+	if FORMAT {
+        e1 := exec.Command("gofmt", "-w", OUTPUT_DIR_GO_X).Run()
+        e2 := exec.Command("goimports", "-w", OUTPUT_DIR_GO_X).Run()
+        helper.NoErr(e1)
+        helper.NoErr(e2)
+    }
 }
 
 func genTablesOrma(tplName string, gen *GenOut) {
@@ -47,8 +51,14 @@ func genTablesOrma(tplName string, gen *GenOut) {
 }
 
 func writeOutput(fileName, output string) {
-	println(output)
-	ioutil.WriteFile(OUTPUT_DIR+fileName, []byte(output), os.ModeType)
+	//println(output)
+	ioutil.WriteFile(OUTPUT_DIR_GO_X+fileName, []byte(output), os.ModeType)
+
+}
+
+func writeOutputConst(fileName, output string) {
+    //println(output)
+    ioutil.WriteFile(OUTPUT_DIR_GO_X_CONST+fileName, []byte(output), os.ModeType)
 
 }
 
