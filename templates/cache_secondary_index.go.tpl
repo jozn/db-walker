@@ -4,7 +4,7 @@ import (
     "strconv"
     "ms/sun/base"
 )
-
+//TODO: WE MUST separate int from string to not let empty string "" from preloading or loading and inserting into caches
 {{range .Tables}}
 	{{- $short := .ShortName}}
 	{{- $table := .TableSchemeOut}}
