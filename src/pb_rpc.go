@@ -37,7 +37,7 @@ func Gen_ProtosForTables(tbls []*Table) (protoMsgDefs, protoConv string) {
 
 		for i, f := range t.Columns {
 			fpb := ProtoMessageFieldDef{
-				TagId:   (i*2 + 1),
+				TagId:   (i*1 + 1),
 				Name:    f.ColumnName,
 				TypeMix: MysqlParseTypeToProtoclBuffer(f.SqlType, true),
 				Repeat:  false,

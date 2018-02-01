@@ -2,7 +2,7 @@ package src
 
 import "strings"
 
-var notMakeTableType = []string{"user"}
+var notMakeTableType = []string{}//"user"}
 
 func skipTableModel(table string) bool {
 	t := strings.ToLower(table)
