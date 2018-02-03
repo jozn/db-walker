@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ms/snake/src"
+	"ms/db_walker/src"
 )
 
 func main() {
