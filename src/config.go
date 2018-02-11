@@ -7,10 +7,12 @@ const (
 	OUTPUT_DIR_GO_X       = `C:\Go\_gopath\src\ms\sun2\shared\x\`
 	OUTPUT_DIR_GO_X_CONST = `C:\Go\_gopath\src\ms\sun2\shared\x\xconst\`
 	OUTPUT_PROTO_DIR      = `C:\Go\_gopath\src\ms\sun2\shared\proto\`
-	DATABASE              = "sun"
+	//DATABASE              = "sun"
 
 	FORMAT = true
 )
+
+var DATABASES = []string{"sun", "sun_chat"}
 
 var OutPutBuffer = &GenOut{
 	PackageName: "x",
