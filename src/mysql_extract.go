@@ -40,12 +40,12 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 			TableNameSql:   r.TABLE_NAME,                               //fmt.Sprintf("`%s`.`%s`", schema, r.TABLE_NAME),
 			DataBase:       schema,
 			Seq:            i,
-			TableNameGo:    SingularizeIdentifier(r.TABLE_NAME),         //,SnakeToCamel(r.TABLE_NAME),
-			TableNameJava:  SingularizeIdentifier(r.TABLE_NAME),         //SnakeToCamel(r.TABLE_NAME),
+			TableNameGo:    SingularizeIdentifier(r.TABLE_NAME), //,SnakeToCamel(r.TABLE_NAME),
+			TableNameJava:  SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
 			//TableNamePB:    "PB_" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
-			TableNamePB:    "" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
-			ShortName:      shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
-			NeedTrigger:    needTriggerTable(r.TABLE_NAME),
+			TableNamePB: "" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
+			ShortName:   shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
+			NeedTrigger: needTriggerTable(r.TABLE_NAME),
 		}
 		if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true
@@ -66,7 +66,8 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 		IS_NULLABLE      string //'YES'
 		COLUMN_DEFAULT   sql.NullString
 		COLUMN_TYPE      string
-		COLUMN_KEY       string //if == 'PRI' then is the primiry key
+		COLUMN_KEY       string //if == 'PRI' then is the primiry key -- not neccoery auto_incer
+		EXTRA            string //if == 'auto_increment' then this is the auto incerment -- not neccoery primiry key
 		COLUMN_COMMENT   string
 	}{}
 	// sql query
@@ -82,6 +83,12 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 	helper.NoErr(err)
 	//fmt.Println("Mysql loader - load tables: ", rows)
 	for _, r := range rows {
+	    //if this coulmn is auto_incermnt but not primiry this means: this table has one auto Seq columns
+	    //so skip it from our entire genrated paradigram and make the table
+        if strings.ToLower(r.EXTRA) == "auto_increment" && strings.ToUpper(r.COLUMN_KEY) != "PRI"  {
+            table.IsAutoIncrement = false
+            continue
+        }
 		_, _, gotype := sqlTypeToGoType(r.COLUMN_TYPE, false)
 		t := &Column{
 			ColumnName:    r.COLUMN_NAME,
@@ -119,7 +126,7 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 		`NOT non_unique AS IS_UNIQUE ` +
 		`FROM information_schema.statistics ` +
 		//`WHERE index_name <> 'PRIMARY' AND index_schema = ? AND table_name = ?`
-		`WHERE index_schema = ? AND table_name = ?`
+		`WHERE index_schema = ? AND table_name = ? AND INDEX_NAME not like '%skip%' `
 
 	XOLogDebug(sqlstr, schema, tableName)
 	err = db.Select(&rows, sqlstr, schema, tableName)

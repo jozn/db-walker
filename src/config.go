@@ -12,7 +12,7 @@ const (
 	FORMAT = true
 )
 
-var DATABASES = []string{"sun", "sun_chat"}
+var DATABASES = []string{"sun", "sun_chat", "sun_file"}
 
 var OutPutBuffer = &GenOut{
 	PackageName: "x",
