@@ -64,7 +64,9 @@ func ({{ $short }} *{{ .TableNameGo }}) Insert(db XODB) error {
 		`)`
 
 	// run query
-	XOLog(sqlstr, {{ fieldnames .Columns $short }})
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, {{ fieldnames .Columns $short }})
+	}
 	_, err = db.Exec(sqlstr, {{ fieldnames .Columns $short }})
 	if err != nil {
 		return err
@@ -81,17 +83,23 @@ func ({{ $short }} *{{ .TableNameGo }}) Insert(db XODB) error {
 		`)`
 
 	// run query
-	XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
+	}
 	res, err := db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
 	// retrieve id
 	id, err := res.LastInsertId()
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
@@ -118,10 +126,14 @@ func ({{ $short }} *{{ .TableNameGo }}) Replace(db XODB) error {
 		`)`
 
 	// run query
-	XOLog(sqlstr, {{ fieldnames .Columns $short  }})
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, {{ fieldnames .Columns $short  }})
+	}
 	_, err = db.Exec(sqlstr, {{ fieldnames .Columns $short }})
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
@@ -134,17 +146,23 @@ func ({{ $short }} *{{ .TableNameGo }}) Replace(db XODB) error {
 		`)`
 
 	// run query
-	XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
+	}
 	res, err := db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
 	// retrieve id
 	id, err := res.LastInsertId()
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
@@ -178,10 +196,14 @@ func ({{ $short }} *{{ .TableNameGo }}) Update(db XODB) error {
 		` WHERE {{ colname .PrimaryKey }} = ?`
 
 	// run query
-	XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }}, {{ $short }}.{{ .PrimaryKey.ColumnName }})
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }}, {{ $short }}.{{ .PrimaryKey.ColumnName }})
+	}
 	_, err = db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }}, {{ $short }}.{{ .PrimaryKey.ColumnName }})
 
-	XOLogErr(err)
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLogErr(err)
+	}
 	On{{ .TableNameGo }}_AfterUpdate({{ $short }})
 
 	return err
@@ -214,10 +236,14 @@ func ({{ $short }} *{{ .TableNameGo }}) Delete(db XODB) error {
 	const sqlstr = `DELETE FROM {{ $table }} WHERE {{ colname .PrimaryKey }} = ?`
 
 	// run query
-	XOLog(sqlstr, {{ $short }}.{{ .PrimaryKey.ColumnName }})
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, {{ $short }}.{{ .PrimaryKey.ColumnName }})
+	}
 	_, err = db.Exec(sqlstr, {{ $short }}.{{ .PrimaryKey.ColumnName }})
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
@@ -541,13 +567,17 @@ func (u *{{$selectorType}}) GetRow (db *sqlx.DB) (*{{ $typ }},error) {
 
 	sqlstr, whereArgs := u._stoSql()
 
-	XOLog(sqlstr,whereArgs )
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr,whereArgs )
+	}
 
 	row := &{{$typ}}{}
 	//by Sqlx
 	err = db.Get(row ,sqlstr, whereArgs...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return nil, err
 	}
 
@@ -563,13 +593,17 @@ func (u *{{$selectorType}}) GetRows (db *sqlx.DB) ([]*{{ $typ }},error) {
 
 	sqlstr, whereArgs := u._stoSql()
 
-	XOLog(sqlstr,whereArgs )
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr,whereArgs )
+	}
 
 	var rows []*{{$typ}}
 	//by Sqlx
 	err = db.Unsafe().Select(&rows ,sqlstr, whereArgs...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return nil, err
 	}
 
@@ -592,13 +626,16 @@ func (u *{{$selectorType}}) GetRows2 (db *sqlx.DB) ([]{{ $typ }},error) {
 
 	sqlstr, whereArgs := u._stoSql()
 
-	XOLog(sqlstr,whereArgs )
-
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr,whereArgs )
+	}
 	var rows []*{{$typ}}
 	//by Sqlx
 	err = db.Unsafe().Select(&rows ,sqlstr, whereArgs...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return nil, err
 	}
 
@@ -628,13 +665,17 @@ func (u *{{$selectorType}}) GetString (db *sqlx.DB) (string,error) {
 
 	sqlstr, whereArgs := u._stoSql()
 
-	XOLog(sqlstr,whereArgs )
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr,whereArgs )
+	}
 
 	var res string
 	//by Sqlx
 	err = db.Get(&res ,sqlstr, whereArgs...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return "", err
 	}
 
@@ -646,13 +687,16 @@ func (u *{{$selectorType}}) GetStringSlice (db *sqlx.DB) ([]string,error) {
 
 	sqlstr, whereArgs := u._stoSql()
 
-	XOLog(sqlstr,whereArgs )
-
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr,whereArgs )
+	}
 	var rows []string
 	//by Sqlx
 	err = db.Select(&rows ,sqlstr, whereArgs...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return nil, err
 	}
 
@@ -664,13 +708,16 @@ func (u *{{$selectorType}}) GetIntSlice (db *sqlx.DB) ([]int,error) {
 
 	sqlstr, whereArgs := u._stoSql()
 
-	XOLog(sqlstr,whereArgs )
-
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr,whereArgs )
+	}
 	var rows []int
 	//by Sqlx
 	err = db.Select(&rows ,sqlstr, whereArgs...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return nil, err
 	}
 
@@ -682,13 +729,16 @@ func (u *{{$selectorType}}) GetInt (db *sqlx.DB) (int,error) {
 
 	sqlstr, whereArgs := u._stoSql()
 
-	XOLog(sqlstr,whereArgs )
-
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr,whereArgs )
+	}
 	var res int
 	//by Sqlx
 	err = db.Get(&res ,sqlstr, whereArgs...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return 0, err
 	}
 
@@ -719,16 +769,22 @@ func (u *{{$updaterType}})Update (db XODB) (int,error) {
 		sqlstr += " WHERE " +sqlWherrs
 	}
 
-    XOLog(sqlstr,allArgs)
+	if LogTableSqlReq.{{.TableNameGo}} {
+    	XOLog(sqlstr,allArgs)
+    }
     res, err := db.Exec(sqlstr, allArgs...)
     if err != nil {
-    	XOLogErr(err)
+    	if LogTableSqlReq.{{.TableNameGo}} {
+    		XOLogErr(err)
+    	}
         return 0,err
     }
 
     num, err := res.RowsAffected()
     if err != nil {
-    	XOLogErr(err)
+    	if LogTableSqlReq.{{.TableNameGo}} {
+    		XOLogErr(err)
+    	}
         return 0,err
     }
 
@@ -751,17 +807,23 @@ func (d *{{$deleterType}})Delete (db XODB) (int,error) {
     sqlstr := "DELETE FROM {{ $table}} WHERE " + wheresStr
 
     // run query
-    XOLog(sqlstr, args)
+    if LogTableSqlReq.{{.TableNameGo}} {
+    	XOLog(sqlstr, args)
+    }
     res, err := db.Exec(sqlstr, args...)
     if err != nil {
-    	XOLogErr(err)
+    	if LogTableSqlReq.{{.TableNameGo}} {
+    		XOLogErr(err)
+    	}
         return 0,err
     }
 
     // retrieve id
     num, err := res.RowsAffected()
     if err != nil {
-    	XOLogErr(err)
+    	if LogTableSqlReq.{{.TableNameGo}} {
+    		XOLogErr(err)
+    	}
         return 0,err
     }
 
@@ -793,11 +855,14 @@ func MassInsert_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 		{{ ms_append_fieldnames .Columns "vals" }}
 	}
 
-	XOLog(sqlstr, " MassInsert len = ", ln, vals)
-
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, " MassInsert len = ", ln, vals)
+	}
 	_, err = db.Exec(sqlstr, vals...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
@@ -823,11 +888,14 @@ func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 		{{ ms_append_fieldnames .Columns "vals" }}
 	}
 
-	XOLog(sqlstr, " MassReplace len = ", ln , vals)
-
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, " MassReplace len = ", ln , vals)
+	}
 	_, err = db.Exec(sqlstr, vals...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
@@ -858,11 +926,14 @@ func MassInsert_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 		{{ ms_append_fieldnames .Columns "vals" .PrimaryKey.ColumnName }}
 	}
 
-	XOLog(sqlstr, " MassInsert len = ", ln, vals)
-
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, " MassInsert len = ", ln, vals)
+	}
 	_, err = db.Exec(sqlstr, vals...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 
@@ -888,11 +959,14 @@ func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 		{{ ms_append_fieldnames .Columns "vals" .PrimaryKey.ColumnName }}
 	}
 
-	XOLog(sqlstr, " MassReplace len = ", ln , vals)
-
+	if LogTableSqlReq.{{.TableNameGo}} {
+		XOLog(sqlstr, " MassReplace len = ", ln , vals)
+	}
 	_, err = db.Exec(sqlstr, vals...)
 	if err != nil {
-		XOLogErr(err)
+		if LogTableSqlReq.{{.TableNameGo}} {
+			XOLogErr(err)
+		}
 		return err
 	}
 

@@ -22,3 +22,16 @@ type {{ .TableNameGo }} struct {
 {{- end }}
 */
 {{end}}
+
+///////////////// Skip Loging Tables ////////////////
+type LogTableSql struct{
+    {{range . }}
+    {{ .TableNameGo }} bool
+    {{- end}}
+}
+
+var LogTableSqlReq = LogTableSql{
+	{{range . }}
+    {{ .TableNameGo }}: true ,
+    {{- end}}
+}

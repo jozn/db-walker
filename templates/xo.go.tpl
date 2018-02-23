@@ -36,6 +36,17 @@ var XOLog = func(strings ...interface{}) {
 	}
  }
 
+func init() {
+	go func() {
+		for {
+			time.Sleep(time.Second)
+			if _sqlLogFile != nil {
+				_sqlLogFile.Sync()
+			}
+		}
+	}()
+}
+
  var XOLogErr = func(err error) {
     if config.IS_DEBUG && err!= nil{
         if _sqlLogFile == nil {

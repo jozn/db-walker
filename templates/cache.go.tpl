@@ -26,7 +26,9 @@ import (
 			if err == nil {
 				return obj2, true
 			}
-			XOLogErr(err)
+			if LogTableSqlReq.{{.TableNameGo}} {
+				XOLogErr(err)
+			}
 			return nil, false
 		}
 
@@ -56,7 +58,9 @@ import (
 			if err == nil {
 				return obj2, true
 			}
-			XOLogErr(err)
+			if LogTableSqlReq.{{.TableNameGo}} {
+				XOLogErr(err)
+			}
 			return nil, false
 		}
 
