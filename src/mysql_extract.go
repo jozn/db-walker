@@ -100,6 +100,7 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 			GoDefaultOut:  go_datatype_to_defualt_go_type(gotype),
 			JavaTypeOut:   go_to_java_type(gotype),
 			PBTypeOut:     (gotype),
+            StructTagOut: fmt.Sprintf("`db:\"%s\"`",r.COLUMN_NAME),
 		}
 
 		if strings.ToUpper(r.COLUMN_KEY) == "PRI" {

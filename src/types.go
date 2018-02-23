@@ -41,6 +41,7 @@ type Column struct {
 	GoDefaultOut  string
 	JavaTypeOut   string
 	PBTypeOut     string
+	StructTagOut  string
 }
 
 type ColumnType struct {
