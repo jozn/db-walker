@@ -3,6 +3,7 @@ package {{ .PackageName}}
 import (
     "strconv"
     "ms/sun/base"
+    "errors"
 )
 //TODO: WE MUST separate int from string to not let empty string "" from preloading or loading and inserting into caches
 {{range .Tables}}
@@ -35,6 +36,19 @@ import (
 			XOLogErr(err)
 			return nil, false
 		}
+
+		func (c _StoreImpl) {{ $model }}_By{{$col.ColumnName}}_JustCache ({{$param}} {{$colType}}) (*{{ $model }},bool){
+			o ,ok :=RowCacheIndex.Get("{{ $indexName }}:"+fmt.Sprintf("%v",{{$param}}))
+			if ok {
+				if obj, ok := o.(*{{ $model }});ok{
+					return obj, true
+				}
+			}
+
+			XOLogErr(errors.New("_JustCache is empty for secondry index " + "{{ $indexName }}:"+fmt.Sprintf("%v",{{$param}})))
+			return nil, false
+		}
+
 		{{$param := (printf "%ss" $col.ColumnName) }}
 		func (c _StoreImpl) PreLoad{{ $model }}_By{{$col.ColumnName}}s ({{$param}} []{{$colType}}) {
 			not_cached := make([]{{$colType}},0,len({{$param}}))

@@ -538,6 +538,12 @@ func (u *{{$selectorType}}) Offset(num int) *{{$selectorType}} {
 }
 
 
+func (u *{{$selectorType}}) OrderBy_Rand () *{{$selectorType}} {
+    u.orderBy = " ORDER BY RAND() "
+    return u
+}
+
+
 /////////////////////////  Queryer Selector  //////////////////////////////////
 func (u *{{$selectorType}})_stoSql ()  (string,[]interface{}) {
 	sqlWherrs, whereArgs := whereClusesToSql(u.wheres,u.whereSep)

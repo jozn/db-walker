@@ -3,6 +3,7 @@ package {{ .PackageName}}
 import (
     "strconv"
     "ms/sun/base"
+    "errors"
 )
 
 {{range .Tables}}
@@ -28,6 +29,20 @@ import (
 			}
 			if LogTableSqlReq.{{.TableNameGo}} {
 				XOLogErr(err)
+			}
+			return nil, false
+		}
+
+		func (c _StoreImpl) Get{{ .TableNameGo }}By{{$id}}_JustCache{{$_}} ({{$id}} int) (*{{ .TableNameGo }},bool){
+			o ,ok :=RowCache.Get("{{ .TableNameGo }}:"+strconv.Itoa({{$id}}))
+			if ok {
+				if obj, ok := o.(*{{ .TableNameGo }});ok{
+					return obj, true
+				}
+			}
+			
+			if LogTableSqlReq.{{.TableNameGo}} {
+				XOLogErr(errors.New("_JustCache is empty for {{ .TableNameGo }}: " +strconv.Itoa({{$id}}) ))
 			}
 			return nil, false
 		}
@@ -60,6 +75,20 @@ import (
 			}
 			if LogTableSqlReq.{{.TableNameGo}} {
 				XOLogErr(err)
+			}
+			return nil, false
+		}
+
+		func (c _StoreImpl) Get{{ .TableNameGo }}By{{$id}}_JustCache{{$_}} ({{$id}} string) (*{{ .TableNameGo }},bool){
+			o ,ok :=RowCache.Get("{{ .TableNameGo }}:"+{{$id}})
+			if ok {
+				if obj, ok := o.(*{{ .TableNameGo }});ok{
+					return obj, true
+				}
+			}
+			
+			if LogTableSqlReq.{{.TableNameGo}} {
+				XOLogErr(errors.New("_JustCache is empty for {{ .TableNameGo }}: " +{{$id}} ))
 			}
 			return nil, false
 		}
