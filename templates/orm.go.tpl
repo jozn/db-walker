@@ -538,7 +538,7 @@ func (u *{{$selectorType}}) Offset(num int) *{{$selectorType}} {
 }
 
 
-func (u *{{$selectorType}}) OrderBy_Rand () *{{$selectorType}} {
+func (u *{{$selectorType}}) Order_Rand () *{{$selectorType}} {
     u.orderBy = " ORDER BY RAND() "
     return u
 }
@@ -876,14 +876,18 @@ func MassInsert_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 }
 
 func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
+	if len(rows) == 0 {
+		return errors.New("rows slice should not be empty - inserted nothing")
+	}
 	var err error
 	ln := len(rows)
+	//s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
 	s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
 	insVals_:= strings.Repeat(s, ln)
 	insVals := insVals_[0:len(insVals_)-1]
 	// sql query
 	sqlstr := "REPLACE INTO {{ $table }} (" +
-		"{{ colnames .Columns }}" +
+		"{{ colnames .Columns  }}" +
 		") VALUES " + insVals
 
 	// run query
@@ -895,7 +899,7 @@ func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	}
 
 	if LogTableSqlReq.{{.TableNameGo}} {
-		XOLog(sqlstr, " MassReplace len = ", ln , vals)
+		XOLog(sqlstr, " MassReplace len = ", ln, vals)
 	}
 	_, err = db.Exec(sqlstr, vals...)
 	if err != nil {
@@ -906,6 +910,7 @@ func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	}
 
 	return nil
+
 }
 {{ else }}
 
