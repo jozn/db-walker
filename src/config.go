@@ -14,6 +14,9 @@ const (
 
 var DATABASES = []string{"sun", "sun_chat", "sun_file","sun_meta"}
 
+var triggerNeededArr = []string{"action","user", "chat", "post", "comment", "tags"}
+
+
 var OutPutBuffer = &GenOut{
 	PackageName: "x",
 }

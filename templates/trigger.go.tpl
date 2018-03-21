@@ -11,15 +11,15 @@ func init() {
 }
 
 type TriggerStringModel interface {
-	OnInsert([]string)
-	OnUpdate([]string)
-	OnDelete([]string)
+	OnInsert(ins []string)
+	OnUpdate(ins []string)
+	OnDelete(ins []string)
 }
 
 type TriggerIntModel interface {
-	OnInsert([]int)
-	OnUpdate([]int)
-	OnDelete([]int)
+	OnInsert(ins []int)
+	OnUpdate(ins []int)
+	OnDelete(ins []int)
 }
 
 type TriggerModelListener struct {
