@@ -28,6 +28,7 @@ func NewTemplateFuncs() template.FuncMap {
 		//"hasfield":       hasfield,
 
 		"toLower":              strings.ToLower,
+		"toUpper":              strings.ToUpper,
 		"ms_col_nanme":         ms_col_name,
 		"ms_conds":             ms_conds,
 		"ms_in":                ms_in,

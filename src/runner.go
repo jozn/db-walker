@@ -28,6 +28,15 @@ func Run() {
 		table.Indexes, _ = MyTableIndexes(DB, table.DataBase, table.TableName, table)
 	}
 
+	for _, table := range OutPutBuffer.Tables {
+		if table.NeedTrigger {
+			OutPutBuffer.TablesTriggers = append(OutPutBuffer.TablesTriggers, table)
+		}
+		if table.PrimaryKey != nil {
+		    table.XPrimaryKeyGoType = table.PrimaryKey.GoTypeOut
+        }
+	}
+
 	build(OutPutBuffer)
 	helper.PertyPrint(OutPutBuffer.Tables)
 

@@ -3,6 +3,7 @@ package src
 type GenOut struct {
 	PackageName          string
 	Tables               []*Table
+	TablesTriggers       []*Table
 	GeneratedPb          string
 	GeneratedPbConverter string
 }
@@ -13,22 +14,23 @@ type DataBase struct {
 }
 
 type Table struct {
-	TableName       string
-	Columns         []*Column
-	HasPrimaryKey   bool
-	PrimaryKey      *Column
-	DataBase        string //or schema in PG or tablesapce in cassandra
-	Seq             int
-	Comment         string
-	IsAutoIncrement bool
-	Indexes         []*Index
-	TableSchemeOut  string //with table "`ms`.`post`"
-	TableNameSql    string //"post"
-	TableNameGo     string
-	TableNameJava   string
-	TableNamePB     string
-	ShortName       string
-	NeedTrigger     bool
+	TableName         string
+	Columns           []*Column
+	HasPrimaryKey     bool
+	PrimaryKey        *Column
+	DataBase          string //or schema in PG or tablesapce in cassandra
+	Seq               int
+	Comment           string
+	IsAutoIncrement   bool
+	Indexes           []*Index
+	TableSchemeOut    string //with table "`ms`.`post`"
+	TableNameSql      string //"post"
+	TableNameGo       string
+	TableNameJava     string
+	TableNamePB       string
+	ShortName         string
+	NeedTrigger       bool
+	XPrimaryKeyGoType string //shortcut
 }
 
 type Column struct {

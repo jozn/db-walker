@@ -50,6 +50,9 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 		if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true
 		}
+		if t.NeedTrigger {
+
+        }
 		res = append(res, t)
 	}
 	//helper.PertyPrint(res)

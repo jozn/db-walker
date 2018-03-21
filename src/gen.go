@@ -21,6 +21,7 @@ func build(gen *GenOut) {
 	writeOutput("z_cache_secondary_index.go", buildFromTemplate("cache_secondary_index.go.tpl", gen))
 	writeOutput("J.java", buildFromTemplate("J.java", gen))
 	writeOutput("triggers.sql", buildFromTemplate("triggers.sql", gen))
+	writeOutput("trigger.go", buildFromTemplate("trigger.go.tpl", gen))
 
 	writeOutputConst("tables.go", buildFromTemplate("const.go.tpl", gen))
 
