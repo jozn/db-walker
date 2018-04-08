@@ -2,7 +2,7 @@ package {{ .PackageName}}
 
 import (
     "strconv"
-    "ms/sun/base"
+    "ms/sun/shared/base"
     "errors"
 )
 

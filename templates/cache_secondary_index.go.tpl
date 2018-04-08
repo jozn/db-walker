@@ -2,7 +2,7 @@ package {{ .PackageName}}
 
 import (
     "strconv"
-    "ms/sun/base"
+    "ms/sun/shared/base"
     "errors"
 )
 //TODO: WE MUST separate int from string to not let empty string "" from preloading or loading and inserting into caches

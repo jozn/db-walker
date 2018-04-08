@@ -2,7 +2,7 @@ package {{ .PackageName}}
 
 import (
     "strconv"
-    "ms/sun/base"
+    "ms/sun/shared/base"
     "github.com/jmoiron/sqlx"
 )
 //todo this code can be used for multi secondery coulmn -- but this one interfier with secondery_template - in futer merege this two temple to one unifed that uses both primiry keys and othe seconder options and with reloadings

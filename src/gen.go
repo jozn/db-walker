@@ -3,7 +3,7 @@ package src
 import (
 	"bytes"
 	"io/ioutil"
-	"ms/sun/helper"
+	"ms/sun/shared/helper"
 	"os"
 	"os/exec"
 	"text/template"
