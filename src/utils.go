@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-    "unicode"
+	"unicode"
 )
 
 //copy of "ms/xox/snaker"
@@ -29,7 +29,7 @@ func SnakeToCamel(s string) string {
 			continue
 		}
 
-        r += strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
+		r += strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
 		/*u := strings.ToUpper(w)
 		if ok := commonInitialisms[u]; ok {//me not need we use: Id and Html
 			r += u
@@ -44,18 +44,18 @@ func SnakeToCamel(s string) string {
 // ToSnake convert the given string to snake case following the Golang format:
 // acronyms are converted to lower-case and preceded by an underscore.
 func ToSnake(in string) string {
-    runes := []rune(in)
-    length := len(runes)
+	runes := []rune(in)
+	length := len(runes)
 
-    var out []rune
-    for i := 0; i < length; i++ {
-        if i > 0 && unicode.IsUpper(runes[i]) && ((i+1 < length && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
-            out = append(out, '_')
-        }
-        out = append(out, unicode.ToLower(runes[i]))
-    }
+	var out []rune
+	for i := 0; i < length; i++ {
+		if i > 0 && unicode.IsUpper(runes[i]) && ((i+1 < length && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
+			out = append(out, '_')
+		}
+		out = append(out, unicode.ToLower(runes[i]))
+	}
 
-    return string(out)
+	return string(out)
 }
 
 // commonInitialisms is the set of commonInitialisms.
@@ -240,6 +240,36 @@ switchDT:
 	}
 
 	return precision, nilVal, typ
+}
+
+func sqlCockRoachToTypeToGoType(sqlType string) string {
+
+	var typ string
+
+	switch strings.ToLower(sqlType) {
+	case "string","uuid":
+		typ = "string"
+	case "bool":
+		typ = "bool"
+	case "int","serial":
+		typ = "int"
+	case "json":
+		typ = "string"
+	case "bytes":
+		typ = "[]byte"
+	case "date","time","timestamp":
+		typ = "time.Time"
+    case "decimal":
+        typ = "float64"
+    case "float":
+        typ = "float64"
+
+
+    default:
+		typ = "UNKNOWN_sqlToGo__" + typ
+	}
+
+	return typ
 }
 
 var PrecScaleRE = regexp.MustCompile(`\(([0-9]+)(\s*,[0-9]+)?\)$`)

@@ -13,6 +13,8 @@ const (
 )
 
 var DATABASES = []string{"sun", "sun_chat", "sun_file","sun_meta", "sun_push", "sun_log"}
+var DATABASES_COCKROACHE = []string{"public","suncdb"}
+//var DATABASES_COCKROACHE = []string{"suncdb"}
 
 var triggerNeededArr = []string{"action","user", "chat", "post", "comment", "tags"}
 

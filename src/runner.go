@@ -2,10 +2,13 @@ package src
 
 import (
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	"ms/sun/shared/helper"
 	"regexp"
+    "strings"
 )
 
 var IntRE = regexp.MustCompile(`^int(32|64)?$`)
@@ -33,11 +36,47 @@ func Run() {
 			OutPutBuffer.TablesTriggers = append(OutPutBuffer.TablesTriggers, table)
 		}
 		if table.PrimaryKey != nil {
-		    table.XPrimaryKeyGoType = table.PrimaryKey.GoTypeOut
-        }
+			table.XPrimaryKeyGoType = table.PrimaryKey.GoTypeOut
+		}
 	}
 
 	build(OutPutBuffer)
+	helper.PertyPrint(OutPutBuffer.Tables)
+
+}
+
+func RunCockRoach() {
+	//DB, err := sqlx.Connect("mysql", "root:123456@tcp(localhost:3306)/sun?charset=utf8mb4")
+	//DB, err := sqlx.Connect("postgres", "user=root dbname=bank sslmode=disable")
+	DB, err := sqlx.Connect("postgres", "postgresql://root@localhost:26257?sslmode=disable")
+	fmt.Println(DB, err)
+	//on PG we must lowercase coulmns names unlike the Myql which is upper case
+	DB.MapperFunc(func(s string) string { return strings.ToLower(s) })
+	DB = DB.Unsafe()
+	helper.NoErr(err)
+
+	//OutPutBuffer := &GenOut{}
+	for _, db := range DATABASES_COCKROACHE {
+		tables, err := Roach_LoadTables(DB, db, "BASE TABLE")
+		helper.NoErr(err)
+		OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
+	}
+
+	for _, table := range OutPutBuffer.Tables {
+		table.Columns, _ = Roach_LoadTableColumns(DB, table.DataBase, table.TableName, table)
+		table.Indexes, _ = RoachTableIndexes(DB, table.DataBase, table.TableName, table)
+	}
+
+	/*  for _, table := range OutPutBuffer.Tables {
+	    if table.NeedTrigger {
+	        OutPutBuffer.TablesTriggers = append(OutPutBuffer.TablesTriggers, table)
+	    }
+	    if table.PrimaryKey != nil {
+	        table.XPrimaryKeyGoType = table.PrimaryKey.GoTypeOut
+	    }
+	}
+	*/
+	//build(OutPutBuffer)
 	helper.PertyPrint(OutPutBuffer.Tables)
 
 }

@@ -8,25 +8,19 @@ import (
 	"strings"
 )
 
-var XOLogDebug = func(s string, o ...interface{}) {
-	if true {
-		fmt.Println(s, o)
-	}
-}
-
 // MyTables runs a custom query, returning results as Table.
-func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, err error) {
+func Roach_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, err error) {
 	// sql query
 	const sqlstr = `SELECT * ` +
 		`FROM information_schema.tables ` +
-		`WHERE table_schema = ? AND table_type = ?`
+		`WHERE table_catalog = $1 and table_schema = 'public' AND table_type = $2`
 
 	// run query
 	XOLogDebug(sqlstr, schema, relkind)
 
 	var res2 = []struct {
-		TABLE_NAME     string //`json:"rec_created_by"  db:"TABLE_NAME"`
-		AUTO_INCREMENT sql.NullInt64
+		TABLE_NAME string `db:"table_name"` //`json:"rec_created_by"  db:"TABLE_NAME"`
+		//AUTO_INCREMENT sql.NullInt64 `db:"table_name"`
 	}{}
 	err = db.Unsafe().Select(&res2, sqlstr, schema, relkind)
 	helper.NoErr(err)
@@ -47,9 +41,10 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 			ShortName:   shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
 			NeedTrigger: needTriggerTable(r.TABLE_NAME),
 		}
-		if r.AUTO_INCREMENT.Valid {
+		/*if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true
-		}
+		}*/
+		t.IsAutoIncrement = false
 		if t.NeedTrigger {
 
 		}
@@ -61,22 +56,22 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 }
 
 // My_LoadTableColumns runs a custom query, returning results as Column.
-func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Column, err error) {
+func Roach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Column, err error) {
 	var rows = []struct {
 		ORDINAL_POSITION int
 		COLUMN_NAME      string
 		DATA_TYPE        string
 		IS_NULLABLE      string //'YES'
 		COLUMN_DEFAULT   sql.NullString
-		COLUMN_TYPE      string
-		COLUMN_KEY       string //if == 'PRI' then is the primiry key -- not neccoery auto_incer
-		EXTRA            string //if == 'auto_increment' then this is the auto incerment -- not neccoery primiry key
-		COLUMN_COMMENT   string
+		//COLUMN_TYPE      string
+		//COLUMN_KEY       string //if == 'PRI' then is the primiry key -- not neccoery auto_incer
+		//EXTRA            string //if == 'auto_increment' then this is the auto incerment -- not neccoery primiry key
+		//COLUMN_COMMENT   string
 	}{}
 	// sql query
 	const sqlstr = `SELECT * ` +
 		`FROM information_schema.columns ` +
-		`WHERE table_schema = ? AND table_name = ? ` +
+		`WHERE table_catalog = $1 AND table_schema = 'public' AND table_name = $2 ` +
 		`ORDER BY ordinal_position ASC`
 
 	// run query
@@ -88,19 +83,19 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 	for _, r := range rows {
 		//if this coulmn is auto_incermnt but not primiry this means: this table has one auto Seq columns
 		//so skip it from our entire genrated paradigram and make the table
-		if strings.ToLower(r.EXTRA) == "auto_increment" && strings.ToUpper(r.COLUMN_KEY) != "PRI" {
+		/*if strings.ToLower(r.EXTRA) == "auto_increment" && strings.ToUpper(r.COLUMN_KEY) != "PRI" {
 			table.IsAutoIncrement = false
 			continue
-		}
-		_, _, gotype := sqlTypeToGoType(r.COLUMN_TYPE, false)
+		}*/
+		gotype := sqlCockRoachToTypeToGoType(r.DATA_TYPE)
 		t := &Column{
 			ColumnName:      r.COLUMN_NAME,
 			ColumnNameCamel: SnakeToCamel(r.COLUMN_NAME),
 			ColumnNameSnake: ToSnake(r.COLUMN_NAME),
 			Seq:             r.ORDINAL_POSITION,
-			Comment:         r.COLUMN_COMMENT,
+			Comment:         "",
 			ColumnNameOut:   r.COLUMN_NAME,
-			SqlType:         r.COLUMN_TYPE,
+			SqlType:         r.DATA_TYPE,
 			GoTypeOut:       gotype,
 			GoDefaultOut:    go_datatype_to_defualt_go_type(gotype),
 			JavaTypeOut:     go_to_java_type(gotype),
@@ -108,10 +103,10 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 			StructTagOut:    fmt.Sprintf("`db:\"%s\"`", r.COLUMN_NAME),
 		}
 
-		if strings.ToUpper(r.COLUMN_KEY) == "PRI" {
+		/*if strings.ToUpper(r.COLUMN_KEY) == "PRI" {
 			table.HasPrimaryKey = true
 			table.PrimaryKey = t
-		}
+		}*/
 		//fmt.Println("Mysql loader - load tables: ))))))) ", t)
 		res = append(res, t)
 	}
@@ -120,35 +115,40 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 }
 
 // MyTableIndexes runs a custom query, returning results as Index.
-func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Index, err error) {
+func RoachTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Index, err error) {
 	// sql query
 	var rows = []struct {
-		INDEX_NAME string
-		IS_UNIQUE  bool
+		INDEX_NAME sql.NullString
+		NON_UNIQUE string
 	}{}
 
 	const sqlstr = `SELECT ` +
 		`DISTINCT INDEX_NAME, ` +
-		`NOT non_unique AS IS_UNIQUE ` +
+		`non_unique AS NON_UNIQUE ` +
 		`FROM information_schema.statistics ` +
-		//`WHERE index_name <> 'PRIMARY' AND index_schema = ? AND table_name = ?`
-		`WHERE index_schema = ? AND table_name = ? AND INDEX_NAME not like '%skip%' `
+		`WHERE table_catalog = $1 AND table_name = $2 AND table_schema = 'public' `
 
 	XOLogDebug(sqlstr, schema, tableName)
-	err = db.Select(&rows, sqlstr, schema, tableName)
+	err = db.Unsafe().Select(&rows, sqlstr, schema, tableName)
 	if err != nil {
-		helper.NoErr(err)
+		fmt.Println("RoachTableIndexes err: ", err)
 		return
 	}
 
+    fmt.Println("rows  ", rows)
 	for _, r := range rows {
+	    uniq := false
+	    if strings.ToUpper(r.NON_UNIQUE) == "NO" {
+	        uniq = true
+        }
 		i := &Index{
-			IndexName: r.INDEX_NAME,
-			IsUnique:  r.IS_UNIQUE,
+			IndexName: r.INDEX_NAME.String,
+			IsUnique:  uniq,
 			//FuncNameOut: "Get" + table.TableNameGo + "By" + r.INDEX_NAME,
 		}
-		if strings.ToUpper(r.INDEX_NAME) == "PRIMARY" {
+		if strings.ToUpper(r.INDEX_NAME.String) == "PRIMARY" {
 			i.IsPrimary = true
+			table.HasPrimaryKey = true
 		}
 
 		rs := []struct {
@@ -160,7 +160,7 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 			//`seq_in_index, ` + //starts from 1
 			//`column_name ` +
 			`FROM information_schema.statistics ` +
-			`WHERE index_schema = ? AND table_name = ? AND index_name = ? ` +
+			`WHERE table_catalog = $1 AND table_name = $2 AND index_name = $3 ` +
 			`ORDER BY seq_in_index`
 
 		XOLogDebug(sqlstr, schema, tableName, i.IndexName)
@@ -172,6 +172,9 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 
 		for _, c := range rs {
 			i.Columns = append(i.Columns, table.GetColumnByName(c.COLUMN_NAME))
+			if table.HasPrimaryKey {
+			    table.PrimaryKey = table.GetColumnByName(c.COLUMN_NAME)
+            }
 		}
 		i.FuncNameOut = indexName(i, table)
 		res = append(res, i)
@@ -180,6 +183,7 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 	return res, nil
 }
 
+/*
 func indexName(index *Index, table *Table) string {
 	name := ""
 	if len(index.Columns) == 1 {
@@ -196,3 +200,4 @@ func indexName(index *Index, table *Table) string {
 
 	return name
 }
+*/
