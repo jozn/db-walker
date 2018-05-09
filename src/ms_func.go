@@ -80,7 +80,7 @@ func ms_append_fieldnames(fields []*Column, slice string, ignoreNames ...string)
 		if ignore[f.ColumnName] {
 			continue
 		}
-		str += fmt.Sprintf("%s = append(%s, row.%s) \n", slice, slice, f.ColumnName)
+		str += fmt.Sprintf("%s = append(%s, row.%s) \n", slice, slice, f.ColumnNameCamel)
 
 		i++
 	}

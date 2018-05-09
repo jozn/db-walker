@@ -9,11 +9,11 @@ const (
 {{range .Tables}}
 	var {{.TableNameGo}} = 	struct {
 		{{range .Columns}}
-			{{.ColumnNameCamel}} string
+			{{.ColumnName}} string
 		{{- end}}
 	}{
 		{{range .Columns}}
-        	{{.ColumnNameCamel}}: "{{.ColumnName}}",
+        	{{.ColumnName}}: "{{.ColumnName}}",
         {{- end}}
 	}
 {{end}}

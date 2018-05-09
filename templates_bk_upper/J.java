@@ -6,7 +6,7 @@ public class J {
 {{- with $model }}
 	public static class {{.TableNameJava}} {//oridnal: {{$key }}
 		{{- range .Columns }}
-		public {{ .JavaTypeOut }} {{ .ColumnNameCamel }}; //{{ .ColumnName }}
+		public {{ .JavaTypeOut }} {{ .ColumnName }};
 		{{- end }}
 	}
 {{end -}}

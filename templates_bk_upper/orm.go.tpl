@@ -26,7 +26,7 @@ import (
 // Manualy copy this to project
 type {{ .TableNameGo }}__ struct {
 {{- range .Columns }}
-	{{ .ColumnNameCamel }} {{ .GoTypeOut }} `json:"{{ .ColumnName }}"` // {{ .ColumnName }} -
+	{{ .ColumnName }} {{ .GoTypeOut }} `json:"{{ .ColumnName }}"` // {{ .ColumnName }} -
 {{- end }}
 {{- if .PrimaryKey }}
 	// xo fields
@@ -84,9 +84,9 @@ func ({{ $short }} *{{ .TableNameGo }}) Insert(db XODB) error {
 
 	// run query
 	if LogTableSqlReq.{{.TableNameGo}} {
-		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnNameCamel }})
+		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
 	}
-	res, err := db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnNameCamel }})
+	res, err := db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
 	if err != nil {
 		if LogTableSqlReq.{{.TableNameGo}} {
 			XOLogErr(err)
@@ -104,7 +104,7 @@ func ({{ $short }} *{{ .TableNameGo }}) Insert(db XODB) error {
 	}
 
 	// set primary key and existence
-	{{ $short }}.{{ .PrimaryKey.ColumnNameCamel }} = {{ .PrimaryKey.GoTypeOut }}(id)
+	{{ $short }}.{{ .PrimaryKey.ColumnName }} = {{ .PrimaryKey.GoTypeOut }}(id)
 	{{ $short }}._exists = true
 {{ end }}
 
@@ -147,9 +147,9 @@ func ({{ $short }} *{{ .TableNameGo }}) Replace(db XODB) error {
 
 	// run query
 	if LogTableSqlReq.{{.TableNameGo}} {
-		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnNameCamel }})
+		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
 	}
-	res, err := db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnNameCamel }})
+	res, err := db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }})
 	if err != nil {
 		if LogTableSqlReq.{{.TableNameGo}} {
 			XOLogErr(err)
@@ -167,7 +167,7 @@ func ({{ $short }} *{{ .TableNameGo }}) Replace(db XODB) error {
 	}
 
 	// set primary key and existence
-	{{ $short }}.{{ .PrimaryKey.ColumnNameCamel }} = {{ .PrimaryKey.GoTypeOut }}(id)
+	{{ $short }}.{{ .PrimaryKey.ColumnName }} = {{ .PrimaryKey.GoTypeOut }}(id)
 	{{ $short }}._exists = true
 {{end}}
 
@@ -197,9 +197,9 @@ func ({{ $short }} *{{ .TableNameGo }}) Update(db XODB) error {
 
 	// run query
 	if LogTableSqlReq.{{.TableNameGo}} {
-		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnNameCamel }}, {{ $short }}.{{ .PrimaryKey.ColumnNameCamel }})
+		XOLog(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }}, {{ $short }}.{{ .PrimaryKey.ColumnName }})
 	}
-	_, err = db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnNameCamel }}, {{ $short }}.{{ .PrimaryKey.ColumnNameCamel }})
+	_, err = db.Exec(sqlstr, {{ fieldnames .Columns $short .PrimaryKey.ColumnName }}, {{ $short }}.{{ .PrimaryKey.ColumnName }})
 
 	if LogTableSqlReq.{{.TableNameGo}} {
 		XOLogErr(err)
@@ -237,9 +237,9 @@ func ({{ $short }} *{{ .TableNameGo }}) Delete(db XODB) error {
 
 	// run query
 	if LogTableSqlReq.{{.TableNameGo}} {
-		XOLog(sqlstr, {{ $short }}.{{ .PrimaryKey.ColumnNameCamel }})
+		XOLog(sqlstr, {{ $short }}.{{ .PrimaryKey.ColumnName }})
 	}
-	_, err = db.Exec(sqlstr, {{ $short }}.{{ .PrimaryKey.ColumnNameCamel }})
+	_, err = db.Exec(sqlstr, {{ $short }}.{{ .PrimaryKey.ColumnName }})
 	if err != nil {
 		if LogTableSqlReq.{{.TableNameGo}} {
 			XOLogErr(err)
@@ -317,13 +317,12 @@ func (u *{{$operationType}}) Or () *{{$operationType}} {
 }
 		{{- range $Columns }}
 
-			{{- $colNameCamel := .ColumnNameCamel }}
 			{{- $colName := .ColumnName }}
 			{{- $colType := .GoTypeOut }}
 
 				{{- if (or (eq $colType "int64") (eq $colType "int") ) }}
 
-func (u *{{$operationType}}) {{ $colNameCamel }}_In (ins []int) *{{$operationType}} {
+func (u *{{$operationType}}) {{ $colName }}_In (ins []int) *{{$operationType}} {
     w := whereClause{}
     var insWhere []interface{}
     for _, i:= range ins {
@@ -336,7 +335,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_In (ins []int) *{{$operationTyp
     return u
 }
 
-func (u *{{$operationType}}) {{ $colNameCamel }}_Ins (ins ...int) *{{$operationType}} {
+func (u *{{$operationType}}) {{ $colName }}_Ins (ins ...int) *{{$operationType}} {
     w := whereClause{}
     var insWhere []interface{}
     for _, i:= range ins {
@@ -349,7 +348,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_Ins (ins ...int) *{{$operationT
     return u
 }
 
-func (u *{{$operationType}}) {{ $colNameCamel }}_NotIn (ins []int) *{{$operationType}} {
+func (u *{{$operationType}}) {{ $colName }}_NotIn (ins []int) *{{$operationType}} {
     w := whereClause{}
     var insWhere []interface{}
     for _, i:= range ins {
@@ -365,7 +364,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_NotIn (ins []int) *{{$operation
 					{{- with $ms_cond_list }}
 						{{- range  .  }}
 
-func (d *{{$operationType}}) {{ $colNameCamel }}{{ .Suffix }} (val int) *{{$operationType}} {
+func (d *{{$operationType}}) {{ $colName }}{{ .Suffix }} (val int) *{{$operationType}} {
     w := whereClause{}
     var insWhere []interface{}
     insWhere = append(insWhere,val)
@@ -392,12 +391,11 @@ func (d *{{$operationType}}) {{ $colNameCamel }}{{ .Suffix }} (val int) *{{$oper
 		{{- range $Columns }}
 
 			{{- $colName := .ColumnName }}
-			{{- $colNameCamel := .ColumnNameCamel }}
 			{{- $colType := .GoTypeOut }}
 
 				{{- if (eq $colType "string") }}
 
-func (u *{{$operationType}}) {{ $colNameCamel }}_In (ins []string) *{{$operationType}} {
+func (u *{{$operationType}}) {{ $colName }}_In (ins []string) *{{$operationType}} {
     w := whereClause{}
     var insWhere []interface{}
     for _, i:= range ins {
@@ -410,7 +408,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_In (ins []string) *{{$operation
     return u
 }
 
-func (u *{{$operationType}}) {{ $colNameCamel }}_NotIn (ins []string) *{{$operationType}} {
+func (u *{{$operationType}}) {{ $colName }}_NotIn (ins []string) *{{$operationType}} {
     w := whereClause{}
     var insWhere []interface{}
     for _, i:= range ins {
@@ -424,7 +422,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_NotIn (ins []string) *{{$operat
 }
 
 //must be used like: UserName_like("hamid%")
-func (u *{{$operationType}}) {{ $colNameCamel }}_Like (val string) *{{$operationType}} {
+func (u *{{$operationType}}) {{ $colName }}_Like (val string) *{{$operationType}} {
     w := whereClause{}
     var insWhere []interface{}
     insWhere = append(insWhere,val)
@@ -438,7 +436,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_Like (val string) *{{$operation
 					{{- with $ms_str_cond }}
 						{{- range  .  }}
 
-func (d *{{$operationType}}) {{ $colNameCamel }}{{ .Suffix }} (val string) *{{$operationType}} {
+func (d *{{$operationType}}) {{ $colName }}{{ .Suffix }} (val string) *{{$operationType}} {
     w := whereClause{}
     var insWhere []interface{}
     insWhere = append(insWhere,val)
@@ -469,18 +467,17 @@ func (d *{{$operationType}}) {{ $colNameCamel }}{{ .Suffix }} (val string) *{{$o
 {{- range $Columns }}
 
 	{{- $colName := .ColumnName }}
-	{{- $colNameCamel := .ColumnNameCamel }}
 	{{- $colType := .GoTypeOut }}
 
 	//ints
 	{{- if (or (eq $colType "int64") (eq $colType "int") ) }}
 
-func (u *{{$updaterType}}){{ $colNameCamel }} (newVal int) *{{$updaterType}} {
+func (u *{{$updaterType}}){{ $colName }} (newVal int) *{{$updaterType}} {
     u.updates[" {{$colName}} = ? "] = newVal
     return u
 }
 
-func (u *{{$updaterType}}){{ $colNameCamel }}_Increment (count int) *{{$updaterType}} {
+func (u *{{$updaterType}}){{ $colName }}_Increment (count int) *{{$updaterType}} {
 	if count > 0 {
 		u.updates[" {{$colName}} = {{$colName}}+? "] = count
 	}
@@ -495,7 +492,7 @@ func (u *{{$updaterType}}){{ $colNameCamel }}_Increment (count int) *{{$updaterT
 
 	//string
 	{{- if (eq $colType "string") }}
-func (u *{{$updaterType}}){{ $colNameCamel }} (newVal string) *{{$updaterType}} {
+func (u *{{$updaterType}}){{ $colName }} (newVal string) *{{$updaterType}} {
     u.updates[" {{$colName}} = ? "] = newVal
     return u
 }
@@ -512,20 +509,19 @@ func (u *{{$updaterType}}){{ $colNameCamel }} (newVal string) *{{$updaterType}} 
 {{- range $Columns }}
 
 	{{- $colName := .ColumnName }}
-	{{- $colNameCamel := .ColumnNameCamel }}
 	{{- $colType := .GoTypeOut }}
 
-func (u *{{$selectorType}}) OrderBy_{{ $colNameCamel }}_Desc () *{{$selectorType}} {
+func (u *{{$selectorType}}) OrderBy_{{ $colName }}_Desc () *{{$selectorType}} {
     u.orderBy = " ORDER BY {{$colName}} DESC "
     return u
 }
 
-func (u *{{$selectorType}}) OrderBy_{{ $colNameCamel }}_Asc () *{{$selectorType}} {
+func (u *{{$selectorType}}) OrderBy_{{ $colName }}_Asc () *{{$selectorType}} {
     u.orderBy = " ORDER BY {{$colName}} ASC "
     return u
 }
 
-func (u *{{$selectorType}}) Select_{{ $colNameCamel }} () *{{$selectorType}} {
+func (u *{{$selectorType}}) Select_{{ $colName }} () *{{$selectorType}} {
     u.selectCol = "{{$colName}}"
     return u
 }
@@ -938,7 +934,7 @@ func MassInsert_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 
 	for _,row := range rows {
 		// vals = append(vals,row.UserId)
-		{{ ms_append_fieldnames .Columns "vals" .PrimaryKey.ColumnNameCamel }}
+		{{ ms_append_fieldnames .Columns "vals" .PrimaryKey.ColumnName }}
 	}
 
 	if LogTableSqlReq.{{.TableNameGo}} {
@@ -971,7 +967,7 @@ func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 
 	for _,row := range rows {
 		// vals = append(vals,row.UserId)
-		{{ ms_append_fieldnames .Columns "vals" .PrimaryKey.ColumnNameCamel }}
+		{{ ms_append_fieldnames .Columns "vals" .PrimaryKey.ColumnName }}
 	}
 
 	if LogTableSqlReq.{{.TableNameGo}} {

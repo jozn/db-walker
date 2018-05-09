@@ -12,7 +12,7 @@ import (
 		{{- $table := .TableSchemeOut}}
 		{{- $typ := .TableNameGo }}
 		{{- $_ := "" }}
-		{{- $id := (.PrimaryKey.ColumnNameCamel) }}
+		{{- $id := (.PrimaryKey.ColumnName) }}
 
 		{{if (eq .PrimaryKey.GoTypeOut "int") }}
 		{{/* //{{ .TableNameGo }} Events - * (Manually copy this to other location) */}}
@@ -23,7 +23,7 @@ import (
 					return obj, true
 				}
 			}
-			obj2 ,err := {{ .TableNameGo }}By{{.PrimaryKey.ColumnNameCamel}}(base.DB, {{$id}})
+			obj2 ,err := {{ .TableNameGo }}By{{.PrimaryKey.ColumnName}}(base.DB, {{$id}})
 			if err == nil {
 				return obj2, true
 			}

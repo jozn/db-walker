@@ -8,7 +8,7 @@ package x
 	{{- end }}
 	type {{ .TableNameGo }} struct {
 		{{- range .Columns }}
-			{{ .ColumnNameCamel }} {{ .GoTypeOut }} {{ .StructTagOut }} {{ ms_col_comment_raw .Comment }}
+			{{ .ColumnName }} {{ .GoTypeOut }} {{ .StructTagOut }} {{ ms_col_comment_raw .Comment }}
 		{{- end }}
 		{{- if .PrimaryKey }}
 			{{/* // xox fields */}}
@@ -18,7 +18,7 @@ package x
 	/*
 := &x.{{ .TableNameGo }} {
 	{{- range .Columns }}
-	{{ .ColumnNameCamel }}: {{.GoDefaultOut}},
+	{{ .ColumnName }}: {{.GoDefaultOut}},
 	{{- end }}
 	*/
 {{end}}

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+    "unicode"
 )
 
 //copy of "ms/xox/snaker"
@@ -28,15 +29,33 @@ func SnakeToCamel(s string) string {
 			continue
 		}
 
-		u := strings.ToUpper(w)
-		if ok := commonInitialisms[u]; ok {
+        r += strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
+		/*u := strings.ToUpper(w)
+		if ok := commonInitialisms[u]; ok {//me not need we use: Id and Html
 			r += u
 		} else {
 			r += strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
-		}
+		}*/
 	}
 
 	return r
+}
+
+// ToSnake convert the given string to snake case following the Golang format:
+// acronyms are converted to lower-case and preceded by an underscore.
+func ToSnake(in string) string {
+    runes := []rune(in)
+    length := len(runes)
+
+    var out []rune
+    for i := 0; i < length; i++ {
+        if i > 0 && unicode.IsUpper(runes[i]) && ((i+1 < length && unicode.IsLower(runes[i+1])) || unicode.IsLower(runes[i-1])) {
+            out = append(out, '_')
+        }
+        out = append(out, unicode.ToLower(runes[i]))
+    }
+
+    return string(out)
 }
 
 // commonInitialisms is the set of commonInitialisms.

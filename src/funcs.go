@@ -295,6 +295,7 @@ func colvals(fields []*Column, ignoreNames ...string) string {
 //
 // Used to present a comma separated list of field names, ie in a Go statement
 // (ie, "t.Field1, t.Field2, t.Field3 ...")
+//me: used uper names
 func fieldnames(fields []*Column, prefix string, ignoreNames ...string) string {
 	ignore := map[string]bool{}
 	for _, n := range ignoreNames {
@@ -304,14 +305,14 @@ func fieldnames(fields []*Column, prefix string, ignoreNames ...string) string {
 	str := ""
 	i := 0
 	for _, f := range fields {
-		if ignore[f.ColumnName] {
+		if ignore[f.ColumnNameCamel] {
 			continue
 		}
 
 		if i != 0 {
 			str = str + ", "
 		}
-		str = str + prefix + "." + f.ColumnName
+		str = str + prefix + "." + f.ColumnNameCamel
 		//fmt.Println(f.Name)
 		i++
 	}

@@ -34,16 +34,18 @@ type Table struct {
 }
 
 type Column struct {
-	ColumnName    string
-	SqlType       string
-	Seq           int
-	Comment       string
-	ColumnNameOut string
-	GoTypeOut     string
-	GoDefaultOut  string
-	JavaTypeOut   string
-	PBTypeOut     string
-	StructTagOut  string
+	ColumnName      string
+	ColumnNameCamel string
+	ColumnNameSnake string //not used
+	SqlType         string
+	Seq             int
+	Comment         string
+	ColumnNameOut   string //dep: unclear what is the meaning
+	GoTypeOut       string
+	GoDefaultOut    string
+	JavaTypeOut     string
+	PBTypeOut       string
+	StructTagOut    string
 }
 
 type ColumnType struct {

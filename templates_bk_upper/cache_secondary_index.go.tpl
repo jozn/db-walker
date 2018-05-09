@@ -17,7 +17,7 @@ import (
 		{{- $col := (index .Columns 0) -}}//field
 		{{- $colType := $col.GoTypeOut -}}//field
 		{{- $indexName := (printf "%s_%s" $model  .IndexName) -}}//field
-		{{$param := (printf "%s" $col.ColumnNameCamel) }}
+		{{$param := (printf "%s" $col.ColumnName) }}
 		///// Generated from index '{{ .IndexName }}'.
 		func (c _StoreImpl) {{ $model }}_By{{$col.ColumnName}} ({{$param}} {{$colType}}) (*{{ $model }},bool){
 			o ,ok :=RowCacheIndex.Get("{{ $indexName }}:"+fmt.Sprintf("%v",{{$param}}))

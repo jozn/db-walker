@@ -52,7 +52,7 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 		}
 		if t.NeedTrigger {
 
-        }
+		}
 		res = append(res, t)
 	}
 	//helper.PertyPrint(res)
@@ -86,24 +86,26 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 	helper.NoErr(err)
 	//fmt.Println("Mysql loader - load tables: ", rows)
 	for _, r := range rows {
-	    //if this coulmn is auto_incermnt but not primiry this means: this table has one auto Seq columns
-	    //so skip it from our entire genrated paradigram and make the table
-        if strings.ToLower(r.EXTRA) == "auto_increment" && strings.ToUpper(r.COLUMN_KEY) != "PRI"  {
-            table.IsAutoIncrement = false
-            continue
-        }
+		//if this coulmn is auto_incermnt but not primiry this means: this table has one auto Seq columns
+		//so skip it from our entire genrated paradigram and make the table
+		if strings.ToLower(r.EXTRA) == "auto_increment" && strings.ToUpper(r.COLUMN_KEY) != "PRI" {
+			table.IsAutoIncrement = false
+			continue
+		}
 		_, _, gotype := sqlTypeToGoType(r.COLUMN_TYPE, false)
 		t := &Column{
-			ColumnName:    r.COLUMN_NAME,
-			Seq:           r.ORDINAL_POSITION,
-			Comment:       r.COLUMN_COMMENT,
-			ColumnNameOut: r.COLUMN_NAME,
-			SqlType:       r.COLUMN_TYPE,
-			GoTypeOut:     gotype,
-			GoDefaultOut:  go_datatype_to_defualt_go_type(gotype),
-			JavaTypeOut:   go_to_java_type(gotype),
-			PBTypeOut:     (gotype),
-            StructTagOut: fmt.Sprintf("`db:\"%s\"`",r.COLUMN_NAME),
+			ColumnName:      r.COLUMN_NAME,
+			ColumnNameCamel: SnakeToCamel(r.COLUMN_NAME),
+			ColumnNameSnake: ToSnake(r.COLUMN_NAME),
+			Seq:             r.ORDINAL_POSITION,
+			Comment:         r.COLUMN_COMMENT,
+			ColumnNameOut:   r.COLUMN_NAME,
+			SqlType:         r.COLUMN_TYPE,
+			GoTypeOut:       gotype,
+			GoDefaultOut:    go_datatype_to_defualt_go_type(gotype),
+			JavaTypeOut:     go_to_java_type(gotype),
+			PBTypeOut:       (gotype),
+			StructTagOut:    fmt.Sprintf("`db:\"%s\"`", r.COLUMN_NAME),
 		}
 
 		if strings.ToUpper(r.COLUMN_KEY) == "PRI" {
@@ -182,11 +184,11 @@ func indexName(index *Index, table *Table) string {
 	name := ""
 	if len(index.Columns) == 1 {
 		//name = "Get" + table.TableNameGo + "By" + index.Columns[0].ColumnName
-		name = "" + table.TableNameGo + "By" + index.Columns[0].ColumnName
+		name = "" + table.TableNameGo + "By" + index.Columns[0].ColumnNameCamel
 	} else {
 		arr := []string{}
 		for _, col := range table.Columns {
-			arr = append(arr, col.ColumnName)
+			arr = append(arr, col.ColumnNameCamel)
 		}
 		//name = "Get" + table.TableNameGo + "By" + strings.Join(arr, "And")
 		name = "" + table.TableNameGo + "By" + strings.Join(arr, "And")
