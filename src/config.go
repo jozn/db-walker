@@ -1,6 +1,6 @@
 package src
 
-/*const (
+const (
 	TEMPLATES_DIR = `C:\Go\_gopath\src\ms\db_walker\templates\`
 	//OUTPUT_DIR_GO_X       = `C:\Go\_gopath\src\ms\snake\play\`
 	//OUTPUT_DIR_GO_X  = `C:\Go\_gopath\src\ms\sun\models\x\`
@@ -11,8 +11,8 @@ package src
 
 	FORMAT = true
 )
-*/
-//just for play
+
+/*//just for play
 const (
     TEMPLATES_DIR = `C:\Go\_gopath\src\ms\db_walker\templates\`
     OUTPUT_DIR_GO_X       = `C:\Go\_gopath\src\ms\db_walker\play\out\`
@@ -22,9 +22,9 @@ const (
 
     FORMAT = true
 )
-
+*/
 var DATABASES = []string{"sun", "sun_chat", "sun_file","sun_meta", "sun_push", "sun_log"}
-var DATABASES_COCKROACHE = []string{"public","suncdb"}
+var DATABASES_COCKROACHE = []string{"suncdb"}
 //var DATABASES_COCKROACHE = []string{"suncdb"}
 
 var triggerNeededArr = []string{"action","user", "chat", "post", "comment", "tags"}

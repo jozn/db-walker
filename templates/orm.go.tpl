@@ -908,8 +908,7 @@ func MassInsert_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	}
 	var err error
 	ln := len(rows)
-	//s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
-	// s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
+
 	// insVals_:= strings.Repeat(s, ln)
 	// insVals := insVals_[0:len(insVals_)-1]
 	insVals := helper.SqlManyDollars({{$Table.ColNum}}, ln, {{$IsMysql}})
@@ -946,8 +945,6 @@ func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	}
 	var err error
 	ln := len(rows)
-	//s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
-	// s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
 	// insVals_:= strings.Repeat(s, ln)
 	// insVals := insVals_[0:len(insVals_)-1]
 	insVals := helper.SqlManyDollars({{$Table.ColNum}}, ln, {{$IsMysql}})
@@ -986,7 +983,6 @@ func MassInsert_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	}
 	var err error
 	ln := len(rows)
-	//s:= "( ms_question_mark .Columns .PrimaryKey.ColumnName }})," //`(?, ?, ?, ?),`
 	s:= "({{ ms_question_mark .Columns .PrimaryKey.ColumnName }})," //`(?, ?, ?, ?),`
 	insVals_:= strings.Repeat(s, ln)
 	insVals := insVals_[0:len(insVals_)-1]

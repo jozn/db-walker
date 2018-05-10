@@ -23,7 +23,9 @@ func build(gen *GenOut) {
 	writeOutput("triggers.sql", buildFromTemplate("triggers.sql", gen))
 	writeOutput("trigger.go", buildFromTemplate("trigger.go.tpl", gen))
 
-	writeOutputConst("tables.go", buildFromTemplate("const.go.tpl", gen))
+    writeOutput("_tables_lowers.sql", buildFromTemplate("_tables_lowers.sql", gen))
+
+    writeOutputConst("tables.go", buildFromTemplate("const.go.tpl", gen))
 
 	genTablesOrma("orm.go.tpl", gen)
 

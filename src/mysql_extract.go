@@ -9,7 +9,7 @@ import (
 )
 
 var XOLogDebug = func(s string, o ...interface{}) {
-	if true {
+	if false {
 		fmt.Println(s, o)
 	}
 }
@@ -185,6 +185,8 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 
 func indexName(index *Index, table *Table) string {
 	name := ""
+	//helper.PertyPrint(table)
+	//helper.PertyPrint(index)
 	if len(index.Columns) == 1 {
 		//name = "Get" + table.TableNameGo + "By" + index.Columns[0].ColumnName
 		name = "" + table.TableNameGo + "By" + index.Columns[0].ColumnNameCamel

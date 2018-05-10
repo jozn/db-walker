@@ -104,7 +104,9 @@ func ms_question_mark(fields []*Column, ignoreNames ...string) string {
 	}
 
 	s := strings.Repeat("?,", n)
-
+    if len(s) <= 1 {
+        return s
+    }
 	return s[0 : len(s)-1]
 }
 

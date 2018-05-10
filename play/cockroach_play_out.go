@@ -12,7 +12,7 @@ import (
 var DB, err = sqlx.Connect("postgres", "postgresql://root@localhost:26257?sslmode=disable")
 
 func main()  {
-    src.RunCockRoach()
+    src.RunCockRoach_Play_Dep()
 
     DB, err := sqlx.Connect("postgres", "postgresql://root@localhost:26257?sslmode=disable")
     fmt.Println(DB, err)
