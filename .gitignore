@@ -10,3 +10,5 @@
 out*
 /out
 o.tpl
+/logs
+/play/out

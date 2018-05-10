@@ -40,6 +40,9 @@ func Roach_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table,
 			TableNamePB: "" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
 			ShortName:   shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
 			NeedTrigger: needTriggerTable(r.TABLE_NAME),
+			IsMysql:     false,
+			IsPG:        true,
+			Dollar:      "$1",
 		}
 		/*if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true
@@ -135,12 +138,12 @@ func RoachTableIndexes(db *sqlx.DB, schema string, tableName string, table *Tabl
 		return
 	}
 
-    fmt.Println("rows  ", rows)
+	fmt.Println("rows  ", rows)
 	for _, r := range rows {
-	    uniq := false
-	    if strings.ToUpper(r.NON_UNIQUE) == "NO" {
-	        uniq = true
-        }
+		uniq := false
+		if strings.ToUpper(r.NON_UNIQUE) == "NO" {
+			uniq = true
+		}
 		i := &Index{
 			IndexName: r.INDEX_NAME.String,
 			IsUnique:  uniq,
@@ -173,8 +176,8 @@ func RoachTableIndexes(db *sqlx.DB, schema string, tableName string, table *Tabl
 		for _, c := range rs {
 			i.Columns = append(i.Columns, table.GetColumnByName(c.COLUMN_NAME))
 			if table.HasPrimaryKey {
-			    table.PrimaryKey = table.GetColumnByName(c.COLUMN_NAME)
-            }
+				table.PrimaryKey = table.GetColumnByName(c.COLUMN_NAME)
+			}
 		}
 		i.FuncNameOut = indexName(i, table)
 		res = append(res, i)

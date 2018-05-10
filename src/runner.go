@@ -67,7 +67,7 @@ func RunCockRoach() {
 		table.Indexes, _ = RoachTableIndexes(DB, table.DataBase, table.TableName, table)
 	}
 
-	/*  for _, table := range OutPutBuffer.Tables {
+	 for _, table := range OutPutBuffer.Tables {
 	    if table.NeedTrigger {
 	        OutPutBuffer.TablesTriggers = append(OutPutBuffer.TablesTriggers, table)
 	    }
@@ -75,8 +75,8 @@ func RunCockRoach() {
 	        table.XPrimaryKeyGoType = table.PrimaryKey.GoTypeOut
 	    }
 	}
-	*/
-	//build(OutPutBuffer)
+
+	build(OutPutBuffer)
 	helper.PertyPrint(OutPutBuffer.Tables)
 
 }

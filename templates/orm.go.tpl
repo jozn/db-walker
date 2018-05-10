@@ -13,14 +13,18 @@ import (
     "strconv"
     "github.com/jmoiron/sqlx"
 )
+{{ $IsMysql := .IsMysql }}
+{{ $IsPG := .IsPG }}
+{{ $Dollar := .Dollar }}
+{{ $Table := . }}
 
 {{- $short := .ShortName}}// (shortname .TableNameGo "err" "res" "sqlstr" "db" "XOLog") -}}
-{{- $table := .TableSchemeOut }}//(schema .Schema .Table.TableName) -}}
+{{- $tableScheme := .TableSchemeOut }}//(schema .Schema .Table.TableName) -}}
 {{- $typ := .TableNameGo}}// .TableNameGo}}
 {{- if .Comment -}}
 // {{ .Comment }}
 {{- else -}}
-// {{ .TableNameGo }} represents a row from '{{ $table }}'.
+// {{ .TableNameGo }} represents a row from '{{ $tableScheme }}'.
 {{- end }}
 
 // Manualy copy this to project
@@ -57,10 +61,10 @@ func ({{ $short }} *{{ .TableNameGo }}) Insert(db XODB) error {
 
 {{ if not .IsAutoIncrement  }}
 	// sql insert query, primary key must be provided
-	const sqlstr = `INSERT INTO {{ $table }} (` +
+	const sqlstr = `INSERT INTO {{ $tableScheme }} (` +
 		`{{ colnames .Columns }}` +
 		`) VALUES (` +
-		`{{ colvals .Columns }}` +
+		`{{ colvals_dollar . .Columns }}` +
 		`)`
 
 	// run query
@@ -76,10 +80,10 @@ func ({{ $short }} *{{ .TableNameGo }}) Insert(db XODB) error {
 	{{ $short }}._exists = true
 {{ else }}
 	// sql insert query, primary key provided by autoincrement
-	const sqlstr = `INSERT INTO {{ $table }} (` +
+	const sqlstr = `INSERT INTO {{ $tableScheme }} (` +
 		`{{ colnames .Columns .PrimaryKey.ColumnName }}` +
 		`) VALUES (` +
-		`{{ colvals .Columns .PrimaryKey.ColumnName }}` +
+		`{{ colvals_dollar . .Columns .PrimaryKey.ColumnName }}` +
 		`)`
 
 	// run query
@@ -119,11 +123,19 @@ func ({{ $short }} *{{ .TableNameGo }}) Replace(db XODB) error {
 
 	// sql query
 {{ if not .IsAutoIncrement  }}
-	const sqlstr = `REPLACE INTO {{ $table }} (` +
+	{{if $IsMysql}}
+	const sqlstr = `REPLACE INTO {{ $tableScheme }} (` +
 		`{{ colnames .Columns }}` +
 		`) VALUES (` +
 		`{{ colvals .Columns }}` +
 		`)`
+	{{ else }}
+	const sqlstr = `UPSERT INTO {{ $tableScheme }} (` +
+		`{{ colnames .Columns }}` +
+		`) VALUES (` +
+		`{{ colvals .Columns }}` +
+		`)`
+	{{end}}
 
 	// run query
 	if LogTableSqlReq.{{.TableNameGo}} {
@@ -139,7 +151,7 @@ func ({{ $short }} *{{ .TableNameGo }}) Replace(db XODB) error {
 
 	{{ $short }}._exists = true
 {{else}}
-	const sqlstr = `REPLACE INTO {{ $table }} (` +
+	const sqlstr = `REPLACE INTO {{ $tableScheme }} (` +
 		`{{ colnames .Columns .PrimaryKey.ColumnName }}` +
 		`) VALUES (` +
 		`{{ colvals .Columns .PrimaryKey.ColumnName }}` +
@@ -191,9 +203,9 @@ func ({{ $short }} *{{ .TableNameGo }}) Update(db XODB) error {
 	}
 
 	// sql query
-	const sqlstr = `UPDATE {{ $table }} SET ` +
-		`{{ colnamesquery .Columns ", " .PrimaryKey.ColumnName }}` +
-		` WHERE {{ colname .PrimaryKey }} = ?`
+	const sqlstr = `UPDATE {{ $tableScheme }} SET ` +
+		`{{ colnamesquery_dollar . .Columns ", " .PrimaryKey.ColumnName }}` +
+		` WHERE {{ colname .PrimaryKey }} = {{dollar_for_index . $Table.ColNum}}`
 
 	// run query
 	if LogTableSqlReq.{{.TableNameGo}} {
@@ -233,7 +245,7 @@ func ({{ $short }} *{{ .TableNameGo }}) Delete(db XODB) error {
 	}
 
 	// sql query
-	const sqlstr = `DELETE FROM {{ $table }} WHERE {{ colname .PrimaryKey }} = ?`
+	const sqlstr = `DELETE FROM {{ $tableScheme }} WHERE {{ colname .PrimaryKey }} = {{$Dollar}}`
 
 	// run query
 	if LogTableSqlReq.{{.TableNameGo}} {
@@ -268,12 +280,17 @@ func ({{ $short }} *{{ .TableNameGo }}) Delete(db XODB) error {
 type {{ $deleterType }} struct {
 	wheres   []whereClause
     whereSep string
+    dollarIndex int
+	isMysql     bool
 }
 
 type {{ $updaterType }} struct {
 	wheres   []whereClause
-	updates   map[string]interface{}
+	// updates   map[string]interface{}
+	updates     []updateCol
     whereSep string
+    dollarIndex int
+	isMysql     bool
 }
 
 type {{ $selectorType }} struct {
@@ -283,6 +300,8 @@ type {{ $selectorType }} struct {
     orderBy string//" order by id desc //for ints
     limit int
     offset int
+    dollarIndex int
+	isMysql     bool
 }
 
 func New{{ .TableNameGo}}_Deleter()  *{{ $deleterType }} {
@@ -292,7 +311,7 @@ func New{{ .TableNameGo}}_Deleter()  *{{ $deleterType }} {
 
 func New{{ .TableNameGo}}_Updater()  *{{ $updaterType }} {
 	    u := {{ $updaterType }} {whereSep: " AND "}
-	    u.updates =  make(map[string]interface{},10)
+	    //u.updates =  make(map[string]interface{},10)
 	    return &u
 }
 
@@ -301,6 +320,20 @@ func New{{ .TableNameGo}}_Selector()  *{{ $selectorType }} {
 	    return &u
 }
 
+/*/// mysql or cockroach ? or $1 handlers
+func (m *{{ $selectorType }})nextDollars(size int) string  {
+    r := DollarsForSqlIn(size,m.dollarIndex,m.isMysql)
+    m.dollarIndex += size
+    return r
+}
+
+func (m *{{ $selectorType }})nextDollar() string  {
+    r := DollarsForSqlIn(1,m.dollarIndex,m.isMysql)
+    m.dollarIndex += 1
+    return r
+}
+
+*/
 
 {{- $ms_cond_list := ms_conds }}
 {{- $ms_str_cond := ms_str_cond }}
@@ -310,6 +343,21 @@ func New{{ .TableNameGo}}_Selector()  *{{ $selectorType }} {
 //// for ints all selector updater, deleter
 {{ range (ms_to_slice $deleterType $updaterType $selectorType) }}
 		{{ $operationType := . }}
+
+/// mysql or cockroach ? or $1 handlers
+func (m *{{ $operationType }})nextDollars(size int) string  {
+    r := DollarsForSqlIn(size,m.dollarIndex,m.isMysql)
+    m.dollarIndex += size
+    return r
+}
+
+func (m *{{ $operationType }})nextDollar() string  {
+    r := DollarsForSqlIn(1,m.dollarIndex,m.isMysql)
+    m.dollarIndex += 1
+    return r
+}
+
+
 			////////ints
 func (u *{{$operationType}}) Or () *{{$operationType}} {
     u.whereSep = " OR "
@@ -330,7 +378,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_In (ins []int) *{{$operationTyp
         insWhere = append(insWhere,i)
     }
     w.args = insWhere
-    w.condition = " {{ $colName }} IN("+helper.DbQuestionForSqlIn(len(ins))+") "
+    w.condition = " {{ $colName }} IN("+u.nextDollars(len(ins))+") "
     u.wheres = append(u.wheres, w)
 
     return u
@@ -343,7 +391,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_Ins (ins ...int) *{{$operationT
         insWhere = append(insWhere,i)
     }
     w.args = insWhere
-    w.condition = " {{ $colName }} IN("+helper.DbQuestionForSqlIn(len(ins))+") "
+    w.condition = " {{ $colName }} IN("+u.nextDollars(len(ins))+") "
     u.wheres = append(u.wheres, w)
 
     return u
@@ -356,7 +404,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_NotIn (ins []int) *{{$operation
         insWhere = append(insWhere,i)
     }
     w.args = insWhere
-    w.condition = " {{ $colName }} NOT IN("+helper.DbQuestionForSqlIn(len(ins))+") "
+    w.condition = " {{ $colName }} NOT IN("+u.nextDollars(len(ins))+") "
     u.wheres = append(u.wheres, w)
 
     return u
@@ -370,7 +418,7 @@ func (d *{{$operationType}}) {{ $colNameCamel }}{{ .Suffix }} (val int) *{{$oper
     var insWhere []interface{}
     insWhere = append(insWhere,val)
     w.args = insWhere
-    w.condition = " {{ $colName }} {{.Condition}} ? "
+    w.condition = " {{ $colName }} {{.Condition}} " + d.nextDollar()
     d.wheres = append(d.wheres, w)
 
     return d
@@ -404,7 +452,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_In (ins []string) *{{$operation
         insWhere = append(insWhere,i)
     }
     w.args = insWhere
-    w.condition = " {{ $colName }} IN("+helper.DbQuestionForSqlIn(len(ins))+") "
+    w.condition = " {{ $colName }} IN("+u.nextDollars(len(ins))+") "
     u.wheres = append(u.wheres, w)
 
     return u
@@ -417,7 +465,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_NotIn (ins []string) *{{$operat
         insWhere = append(insWhere,i)
     }
     w.args = insWhere
-    w.condition = " {{ $colName }} NOT IN("+helper.DbQuestionForSqlIn(len(ins))+") "
+    w.condition = " {{ $colName }} NOT IN("+u.nextDollars(len(ins))+") "
     u.wheres = append(u.wheres, w)
 
     return u
@@ -429,7 +477,7 @@ func (u *{{$operationType}}) {{ $colNameCamel }}_Like (val string) *{{$operation
     var insWhere []interface{}
     insWhere = append(insWhere,val)
     w.args = insWhere
-    w.condition = " {{ $colName }} LIKE ? "
+    w.condition = " {{ $colName }} LIKE " + u.nextDollar()
     u.wheres = append(u.wheres, w)
 
     return u
@@ -443,7 +491,7 @@ func (d *{{$operationType}}) {{ $colNameCamel }}{{ .Suffix }} (val string) *{{$o
     var insWhere []interface{}
     insWhere = append(insWhere,val)
     w.args = insWhere
-    w.condition = " {{ $colName }} {{.Condition}} ? "
+    w.condition = " {{ $colName }} {{.Condition}} " + u.nextDollars
     d.wheres = append(d.wheres, w)
 
     return d
@@ -476,17 +524,23 @@ func (d *{{$operationType}}) {{ $colNameCamel }}{{ .Suffix }} (val string) *{{$o
 	{{- if (or (eq $colType "int64") (eq $colType "int") ) }}
 
 func (u *{{$updaterType}}){{ $colNameCamel }} (newVal int) *{{$updaterType}} {
-    u.updates[" {{$colName}} = ? "] = newVal
+	up:= updateCol{" {{$colName}} = " + u.nextDollar(),newVal}
+	u.updates = append(u.updates,up)
+    // u.updates[" {{$colName}} = " + u.nextDollar()] = newVal
     return u
 }
 
 func (u *{{$updaterType}}){{ $colNameCamel }}_Increment (count int) *{{$updaterType}} {
 	if count > 0 {
-		u.updates[" {{$colName}} = {{$colName}}+? "] = count
+		up:= updateCol{" {{$colName}} = {{$colName}}+ " + u.nextDollar(),count}
+		u.updates = append(u.updates,up)
+		//u.updates[" {{$colName}} = {{$colName}}+ " + u.nextDollar()] = count
 	}
 
 	if count < 0 {
-		u.updates[" {{$colName}} = {{$colName}}-? "] = -(count) //make it positive
+		up:= updateCol{" {{$colName}} = {{$colName}}- " + u.nextDollar(),count}
+		u.updates = append(u.updates,up)
+		// u.updates[" {{$colName}} = {{$colName}}- " + u.nextDollar() ] = -(count) //make it positive
 	}
 
     return u
@@ -496,7 +550,9 @@ func (u *{{$updaterType}}){{ $colNameCamel }}_Increment (count int) *{{$updaterT
 	//string
 	{{- if (eq $colType "string") }}
 func (u *{{$updaterType}}){{ $colNameCamel }} (newVal string) *{{$updaterType}} {
-    u.updates[" {{$colName}} = ? "] = newVal
+	up:= updateCol{"{{$colName}} = "+ u.nextDollar(),count}
+	u.updates = append(u.updates,up)
+    // u.updates[" {{$colName}} = "+ u.nextDollar()] = newVal
     return u
 }
 	{{- end }}
@@ -552,7 +608,7 @@ func (u *{{$selectorType}}) Order_Rand () *{{$selectorType}} {
 func (u *{{$selectorType}})_stoSql ()  (string,[]interface{}) {
 	sqlWherrs, whereArgs := whereClusesToSql(u.wheres,u.whereSep)
 
-	sqlstr := "SELECT " +u.selectCol +" FROM {{ $table }}"
+	sqlstr := "SELECT " +u.selectCol +" FROM {{ $tableScheme }}"
 
 	if len( strings.Trim(sqlWherrs," ") ) > 0 {//2 for safty
 		sqlstr += " WHERE "+ sqlWherrs
@@ -761,9 +817,13 @@ func (u *{{$updaterType}})Update (db XODB) (int,error) {
 
     var updateArgs []interface{}
     var sqlUpdateArr  []string
-    for up, newVal := range u.updates {
+    /*for up, newVal := range u.updates {
         sqlUpdateArr = append(sqlUpdateArr, up)
         updateArgs = append(updateArgs, newVal)
+    }*/
+    for _, up := range u.updates {
+        sqlUpdateArr = append(sqlUpdateArr, up.col)
+        updateArgs = append(updateArgs, up.val)
     }
     sqlUpdate:= strings.Join(sqlUpdateArr, ",")
 
@@ -773,7 +833,7 @@ func (u *{{$updaterType}})Update (db XODB) (int,error) {
     allArgs = append(allArgs, updateArgs...)
     allArgs = append(allArgs, whereArgs...)
 
-    sqlstr := `UPDATE {{ $table }} SET ` + sqlUpdate
+    sqlstr := `UPDATE {{ $tableScheme }} SET ` + sqlUpdate
 
     if len( strings.Trim(sqlWherrs," ") ) > 0 {//2 for safty
 		sqlstr += " WHERE " +sqlWherrs
@@ -814,7 +874,7 @@ func (d *{{$deleterType}})Delete (db XODB) (int,error) {
         args = append(args,w.args...)
     }
 
-    sqlstr := "DELETE FROM {{ $table}} WHERE " + wheresStr
+    sqlstr := "DELETE FROM {{ $tableScheme}} WHERE " + wheresStr
 
     // run query
     if LogTableSqlReq.{{.TableNameGo}} {
@@ -849,11 +909,12 @@ func MassInsert_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	var err error
 	ln := len(rows)
 	//s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
-	s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
-	insVals_:= strings.Repeat(s, ln)
-	insVals := insVals_[0:len(insVals_)-1]
+	// s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
+	// insVals_:= strings.Repeat(s, ln)
+	// insVals := insVals_[0:len(insVals_)-1]
+	insVals := helper.SqlManyDollars({{$Table.ColNum}}, ln, {{$IsMysql}})
 	// sql query
-	sqlstr := "INSERT INTO {{ $table }} (" +
+	sqlstr := "INSERT INTO {{ $tableScheme }} (" +
 		"{{ colnames .Columns  }}" +
 		") VALUES " + insVals
 
@@ -886,11 +947,12 @@ func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	var err error
 	ln := len(rows)
 	//s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
-	s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
-	insVals_:= strings.Repeat(s, ln)
-	insVals := insVals_[0:len(insVals_)-1]
+	// s:= "({{ ms_question_mark .Columns }})," //`(?, ?, ?, ?),`
+	// insVals_:= strings.Repeat(s, ln)
+	// insVals := insVals_[0:len(insVals_)-1]
+	insVals := helper.SqlManyDollars({{$Table.ColNum}}, ln, {{$IsMysql}})
 	// sql query
-	sqlstr := "REPLACE INTO {{ $table }} (" +
+	sqlstr := "REPLACE INTO {{ $tableScheme }} (" +
 		"{{ colnames .Columns  }}" +
 		") VALUES " + insVals
 
@@ -929,7 +991,7 @@ func MassInsert_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	insVals_:= strings.Repeat(s, ln)
 	insVals := insVals_[0:len(insVals_)-1]
 	// sql query
-	sqlstr := "INSERT INTO {{ $table }} (" +
+	sqlstr := "INSERT INTO {{ $tableScheme }} (" +
 		"{{ colnames .Columns .PrimaryKey.ColumnName }}" +
 		") VALUES " + insVals
 
@@ -962,7 +1024,7 @@ func MassReplace_{{ .TableNameGo}}(rows []{{ .TableNameGo}} ,db XODB) error {
 	insVals_:= strings.Repeat(s, ln)
 	insVals := insVals_[0:len(insVals_)-1]
 	// sql query
-	sqlstr := "REPLACE INTO {{ $table }} (" +
+	sqlstr := "REPLACE INTO {{ $tableScheme }} (" +
 		"{{ colnames .Columns .PrimaryKey.ColumnName }}" +
 		") VALUES " + insVals
 

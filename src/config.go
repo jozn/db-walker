@@ -1,6 +1,6 @@
 package src
 
-const (
+/*const (
 	TEMPLATES_DIR = `C:\Go\_gopath\src\ms\db_walker\templates\`
 	//OUTPUT_DIR_GO_X       = `C:\Go\_gopath\src\ms\snake\play\`
 	//OUTPUT_DIR_GO_X  = `C:\Go\_gopath\src\ms\sun\models\x\`
@@ -10,6 +10,17 @@ const (
 	//DATABASE              = "sun"
 
 	FORMAT = true
+)
+*/
+//just for play
+const (
+    TEMPLATES_DIR = `C:\Go\_gopath\src\ms\db_walker\templates\`
+    OUTPUT_DIR_GO_X       = `C:\Go\_gopath\src\ms\db_walker\play\out\`
+    OUTPUT_DIR_GO_X_CONST = `C:\Go\_gopath\src\ms\db_walker\play\out\xconst\`
+    OUTPUT_PROTO_DIR      = `C:\Go\_gopath\src\ms\db_walker\play\out\proto\`
+    //DATABASE              = "sun"
+
+    FORMAT = true
 )
 
 var DATABASES = []string{"sun", "sun_chat", "sun_file","sun_meta", "sun_push", "sun_log"}

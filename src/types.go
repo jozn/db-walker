@@ -31,6 +31,13 @@ type Table struct {
 	ShortName         string
 	NeedTrigger       bool
 	XPrimaryKeyGoType string //shortcut
+	IsMysql           bool
+	IsPG              bool
+	Dollar            string
+}
+
+func (t *Table) ColNum() int {
+	return len(t.Columns)
 }
 
 type Column struct {

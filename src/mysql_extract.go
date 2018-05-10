@@ -46,6 +46,9 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 			TableNamePB: "" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
 			ShortName:   shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
 			NeedTrigger: needTriggerTable(r.TABLE_NAME),
+            IsMysql:     true,
+            IsPG:        false,
+            Dollar:      "?",
 		}
 		if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true

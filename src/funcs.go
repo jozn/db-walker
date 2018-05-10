@@ -42,6 +42,10 @@ func NewTemplateFuncs() template.FuncMap {
 		"ms_trigger_colmun":    ms_trigger_colmun,
 		//"to_java_type":                to_java_type,
 		//"datatype_to_defualt_go_type": datatype_to_defualt_go_type,
+
+		"colvals_dollar":       colvals_dollar,
+		"colnamesquery_dollar": colnamesquery_dollar,
+		"dollar_for_index":     dollar_for_index,
 	}
 }
 
@@ -233,6 +237,39 @@ func colnamesquery(fields []*Column, sep string, ignoreNames ...string) string {
 	return str
 }
 
+func dollar_for_index(table *Table, index int) string {
+	if table.IsMysql {
+		return "?"
+	}
+	return fmt.Sprintf("$%d", index)
+}
+func colnamesquery_dollar(table *Table, fields []*Column, sep string, ignoreNames ...string) string {
+	ignore := map[string]bool{}
+	for _, n := range ignoreNames {
+		ignore[n] = true
+	}
+
+	str := ""
+	i := 0
+	for _, f := range fields {
+		if ignore[f.ColumnName] {
+			continue
+		}
+
+		if i != 0 {
+			str = str + sep
+		}
+		dollar := "?"
+		if table.IsPG {
+			dollar = fmt.Sprintf("$%d", i+1)
+		}
+		str = str + colname(f) + " = " + dollar //"?" //c.Loader.NthParam(i)
+		i++
+	}
+
+	return str
+}
+
 //
 //// colprefixnames creates a list of the column names found in fields with the
 //// supplied prefix, excluding any Field with Name contained in ignoreNames.
@@ -284,6 +321,33 @@ func colvals(fields []*Column, ignoreNames ...string) string {
 			str = str + ", "
 		}
 		str = str + "?" //c.Loader.NthParam(i)
+		i++
+	}
+
+	return str
+}
+
+func colvals_dollar(table *Table, fields []*Column, ignoreNames ...string) string {
+	ignore := map[string]bool{}
+	for _, n := range ignoreNames {
+		ignore[n] = true
+	}
+
+	str := ""
+	i := 0
+	for _, f := range fields {
+		if ignore[f.ColumnName] {
+			continue
+		}
+
+		if i != 0 {
+			str = str + ", "
+		}
+		dollar := "?"
+		if table.IsPG {
+			dollar = fmt.Sprintf("$%d", i+1)
+		}
+		str = str + dollar //c.Loader.NthParam(i)
 		i++
 	}
 

@@ -137,4 +137,29 @@ func whereClusesToSql(wheres []whereClause, whereSep string ) (string, []interfa
     return wheresStr , args
 }
 
+func DollarsForSqlIn(size, index int, isMysql bool) string {
+	if size < 1 {
+		return ""
+	}
+	if isMysql {
+		if size == 1 {
+			return "?"
+		}
 
+		s := strings.Repeat("?,", size)
+		s = s[0 : len(s)-1] //remove last ','
+		return s
+	}
+	var arr []string
+	for i := 0; i < size; i++ {
+		index++
+		s := fmt.Sprintf("$%d",index )
+		arr = append(arr, s)
+	}
+	return strings.Join(arr, " ,")
+}
+
+type updateCol struct {
+    col string
+    val  interface{}
+}
