@@ -272,6 +272,37 @@ func sqlCockRoachToTypeToGoType(sqlType string) string {
 	return typ
 }
 
+func goToCockRoachType(sqlType string) string {
+
+    var typ string
+
+    switch strings.ToLower(sqlType) {
+    case "string":
+        typ = "string"
+    case "bool":
+        typ = "bool"
+    case "int":
+        typ = "int"
+    case "json":
+        typ = "string"
+    case "[]byte":
+        typ = "bytes"
+    //case "date","time","timestamp":
+    //    typ = "time.Time"
+    case "float32":
+        typ = "float64"
+    case "float64":
+        typ = "float"
+
+
+    default:
+        typ = "UNKNOWN_sqlToGo__" + typ
+    }
+
+    return typ
+}
+
+
 var PrecScaleRE = regexp.MustCompile(`\(([0-9]+)(\s*,[0-9]+)?\)$`)
 
 // ParsePrecision extracts (precision[,scale]) strings from a data type and

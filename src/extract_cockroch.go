@@ -90,6 +90,14 @@ func Roach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 			table.IsAutoIncrement = false
 			continue
 		}*/
+		nullable := false
+		switch strings.ToUpper(r.IS_NULLABLE) {
+		case "YES":
+			nullable = true
+		case "NO":
+			nullable = false
+		}
+
 		gotype := sqlCockRoachToTypeToGoType(r.DATA_TYPE)
 		t := &Column{
 			ColumnName:      r.COLUMN_NAME,
@@ -100,10 +108,12 @@ func Roach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 			ColumnNameOut:   r.COLUMN_NAME,
 			SqlType:         r.DATA_TYPE,
 			GoTypeOut:       gotype,
+			RoachTypeOut:    r.DATA_TYPE,
 			GoDefaultOut:    go_datatype_to_defualt_go_type(gotype),
 			JavaTypeOut:     go_to_java_type(gotype),
 			PBTypeOut:       (gotype),
 			StructTagOut:    fmt.Sprintf("`db:\"%s\"`", r.COLUMN_NAME),
+			IsNullAble:      nullable,
 		}
 
 		/*if strings.ToUpper(r.COLUMN_KEY) == "PRI" {

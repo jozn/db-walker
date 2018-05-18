@@ -491,7 +491,7 @@ func (d *{{$operationType}}) {{ $colNameCamel }}{{ .Suffix }} (val string) *{{$o
     var insWhere []interface{}
     insWhere = append(insWhere,val)
     w.args = insWhere
-    w.condition = " {{ $colName }} {{.Condition}} " + u.nextDollars
+    w.condition = " {{ $colName }} {{.Condition}} " + d.nextDollar()
     d.wheres = append(d.wheres, w)
 
     return d

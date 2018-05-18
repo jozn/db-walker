@@ -24,6 +24,7 @@ func build(gen *GenOut) {
 	writeOutput("trigger.go", buildFromTemplate("trigger.go.tpl", gen))
 
     writeOutput("_tables_lowers.sql", buildFromTemplate("_tables_lowers.sql", gen))
+    writeOutput("_tables_to_cockroach.sql", buildFromTemplate("_tables_to_cockroach.sql", gen))
 
     writeOutputConst("tables.go", buildFromTemplate("const.go.tpl", gen))
 

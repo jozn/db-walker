@@ -46,9 +46,9 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 			TableNamePB: "" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
 			ShortName:   shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
 			NeedTrigger: needTriggerTable(r.TABLE_NAME),
-            IsMysql:     true,
-            IsPG:        false,
-            Dollar:      "?",
+			IsMysql:     true,
+			IsPG:        false,
+			Dollar:      "?",
 		}
 		if r.AUTO_INCREMENT.Valid {
 			t.IsAutoIncrement = true
@@ -95,6 +95,14 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 			table.IsAutoIncrement = false
 			continue
 		}
+
+		nullable := false
+		switch strings.ToUpper(r.IS_NULLABLE) {
+		case "YES":
+			nullable = true
+		case "NO":
+			nullable = false
+		}
 		_, _, gotype := sqlTypeToGoType(r.COLUMN_TYPE, false)
 		t := &Column{
 			ColumnName:      r.COLUMN_NAME,
@@ -105,15 +113,21 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 			ColumnNameOut:   r.COLUMN_NAME,
 			SqlType:         r.COLUMN_TYPE,
 			GoTypeOut:       gotype,
+			RoachTypeOut:    goToCockRoachType(gotype),
 			GoDefaultOut:    go_datatype_to_defualt_go_type(gotype),
 			JavaTypeOut:     go_to_java_type(gotype),
 			PBTypeOut:       (gotype),
 			StructTagOut:    fmt.Sprintf("`db:\"%s\"`", r.COLUMN_NAME),
+			IsNullAble:      nullable,
 		}
 
 		if strings.ToUpper(r.COLUMN_KEY) == "PRI" {
 			table.HasPrimaryKey = true
 			table.PrimaryKey = t
+			t.IsPrimary = true
+		}
+		if strings.ToUpper(r.COLUMN_KEY) == "UNI" {
+			t.IsUnique = true
 		}
 		//fmt.Println("Mysql loader - load tables: ))))))) ", t)
 		res = append(res, t)

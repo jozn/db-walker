@@ -49,10 +49,14 @@ type Column struct {
 	Comment         string
 	ColumnNameOut   string //dep: unclear what is the meaning
 	GoTypeOut       string
+	RoachTypeOut    string
 	GoDefaultOut    string
 	JavaTypeOut     string
 	PBTypeOut       string
 	StructTagOut    string
+	IsNullAble      bool
+	IsPrimary       bool
+	IsUnique        bool
 }
 
 type ColumnType struct {
@@ -93,4 +97,19 @@ func (t *Table) GetColumnByName(col string) *Column {
 		}
 	}
 	return nil
+}
+
+func (t *Column) ToCockroachColumns() string {
+    s:= t.ColumnNameSnake + " " + t.RoachTypeOut + " "
+    if t.IsPrimary {
+        s += "PRIMARY KEY "
+    }
+    if t.IsUnique {
+        s += "UNIQUE "
+    }
+    if !t.IsNullAble {
+        s += "NOT NULL "
+    }
+
+    return s
 }
