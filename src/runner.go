@@ -53,13 +53,15 @@ func Run() {
 
 func addCockRoachTables(OutPutBuffer *GenOut) {
 	DB, err := sqlx.Connect("postgres", "postgresql://root@localhost:26257?sslmode=disable")
+    if err != nil {
+        fmt.Println("cockroach connecting err: ", err)
+        return
+    }
 	fmt.Println(DB, err)
 	//on PG we must lowercase coulmns names unlike the Myql which is upper case
 	DB.MapperFunc(func(s string) string { return strings.ToLower(s) })
 	DB = DB.Unsafe()
-	if err != nil {
-		fmt.Println("cockroach connecting err: ", err)
-	}
+
 	//OutPutBuffer := &GenOut{}
 	for _, db := range DATABASES_COCKROACHE {
 		tables, err := Roach_LoadTables(DB, db, "BASE TABLE")

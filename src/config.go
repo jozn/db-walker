@@ -23,7 +23,8 @@ const (
     FORMAT = true
 )
 */
-var DATABASES = []string{"sun", "sun_chat", "sun_file","sun_meta", "sun_push", "sun_log"}
+var DATABASES = []string{"sun", "sun_chat", "sun_file","sun_meta", "sun_push", "sun_log","sun_internal"}
+//var DATABASES = []string{}
 var DATABASES_COCKROACHE = []string{"suncdb"}
 //var DATABASES_COCKROACHE = []string{"suncdb"}
 

@@ -1,7 +1,6 @@
 package src
 
 import (
-	"github.com/gedex/inflector"
 	"github.com/knq/snaker"
 	"regexp"
 	"strconv"
@@ -339,11 +338,11 @@ func ParsePrecision(dt string) (string, int, int) {
 // SinguralizeIdentifier will singularize a identifier, returning it in
 // CamelCase.
 func SingularizeIdentifier(s string) string {
-	if i := reverseIndexRune(s, '_'); i != -1 {
+	/*if i := reverseIndexRune(s, '_'); i != -1 {
 		s = s[:i] + "_" + inflector.Singularize(s[i+1:])
 	} else {
 		s = inflector.Singularize(s)
-	}
+	}*/
 
 	return snaker.SnakeToCamelIdentifier(s)
 }

@@ -173,7 +173,7 @@ func MysqlParseTypeToProtoclBuffer(dt string, fromMysql bool) SqlToPBType {
 		_ = unsigned
 	}
 
-	switch dt {
+	switch strings.ToLower(dt) {
 	case "bool", "boolean":
 		res = SqlToPBType{
 			Go:    "bool",
@@ -183,7 +183,7 @@ func MysqlParseTypeToProtoclBuffer(dt string, fromMysql bool) SqlToPBType {
 			PB:    "bool",
 		}
 
-	case "char", "varchar", "tinytext", "text", "mediumtext", "longtext":
+	case "string","char", "varchar", "tinytext", "text", "mediumtext", "longtext":
 		res = SqlToPBType{
 			Go:    "string",
 			GoGen: "string",

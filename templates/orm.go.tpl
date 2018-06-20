@@ -305,18 +305,18 @@ type {{ $selectorType }} struct {
 }
 
 func New{{ .TableNameGo}}_Deleter()  *{{ $deleterType }} {
-	    d := {{ $deleterType }} {whereSep: " AND "}
+	    d := {{ $deleterType }} {whereSep: " AND ",isMysql: {{$IsMysql}} }
 	    return &d
 }
 
 func New{{ .TableNameGo}}_Updater()  *{{ $updaterType }} {
-	    u := {{ $updaterType }} {whereSep: " AND "}
+	    u := {{ $updaterType }} {whereSep: " AND ",isMysql: {{$IsMysql}}}
 	    //u.updates =  make(map[string]interface{},10)
 	    return &u
 }
 
 func New{{ .TableNameGo}}_Selector()  *{{ $selectorType }} {
-	    u := {{ $selectorType }} {whereSep: " AND ",selectCol: "*"}
+	    u := {{ $selectorType }} {whereSep: " AND ",selectCol: "*" ,isMysql: {{$IsMysql}} }
 	    return &u
 }
 
@@ -550,7 +550,7 @@ func (u *{{$updaterType}}){{ $colNameCamel }}_Increment (count int) *{{$updaterT
 	//string
 	{{- if (eq $colType "string") }}
 func (u *{{$updaterType}}){{ $colNameCamel }} (newVal string) *{{$updaterType}} {
-	up:= updateCol{"{{$colName}} = "+ u.nextDollar(),count}
+	up:= updateCol{"{{$colName}} = "+ u.nextDollar(),newVal}
 	u.updates = append(u.updates,up)
     // u.updates[" {{$colName}} = "+ u.nextDollar()] = newVal
     return u
