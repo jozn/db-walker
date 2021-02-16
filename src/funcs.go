@@ -2,7 +2,7 @@ package src
 
 import (
 	"fmt"
-	"ms/xox/snaker"
+	"github.com/jozn/xox/snaker"
 	"strconv"
 	"strings"
 	"text/template"

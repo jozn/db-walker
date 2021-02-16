@@ -3,9 +3,9 @@ package src
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"ms/sun/shared/helper"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // MyTables runs a custom query, returning results as Table.
@@ -23,7 +23,7 @@ func Roach_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table,
 		//AUTO_INCREMENT sql.NullInt64 `db:"table_name"`
 	}{}
 	err = db.Unsafe().Select(&res2, sqlstr, schema, relkind)
-	helper.NoErr(err)
+	NoErr(err)
 
 	//fmt.Println("Mysql loader - load tables: ", res2)
 
@@ -81,7 +81,7 @@ func Roach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 	XOLogDebug(sqlstr, schema, tableName)
 
 	err = db.Unsafe().Select(&rows, sqlstr, schema, tableName)
-	helper.NoErr(err)
+	NoErr(err)
 	//fmt.Println("Mysql loader - load tables: ", rows)
 	for _, r := range rows {
 		//if this coulmn is auto_incermnt but not primiry this means: this table has one auto Seq columns
@@ -179,7 +179,7 @@ func RoachTableIndexes(db *sqlx.DB, schema string, tableName string, table *Tabl
 		XOLogDebug(sqlstr, schema, tableName, i.IndexName)
 		err = db.Unsafe().Select(&rs, sqlstr, schema, tableName, i.IndexName)
 		if err != nil {
-			helper.NoErr(err)
+			NoErr(err)
 			return
 		}
 
@@ -196,21 +196,3 @@ func RoachTableIndexes(db *sqlx.DB, schema string, tableName string, table *Tabl
 	return res, nil
 }
 
-/*
-func indexName(index *Index, table *Table) string {
-	name := ""
-	if len(index.Columns) == 1 {
-		//name = "Get" + table.TableNameGo + "By" + index.Columns[0].ColumnName
-		name = "" + table.TableNameGo + "By" + index.Columns[0].ColumnNameCamel
-	} else {
-		arr := []string{}
-		for _, col := range table.Columns {
-			arr = append(arr, col.ColumnNameCamel)
-		}
-		//name = "Get" + table.TableNameGo + "By" + strings.Join(arr, "And")
-		name = "" + table.TableNameGo + "By" + strings.Join(arr, "And")
-	}
-
-	return name
-}
-*/

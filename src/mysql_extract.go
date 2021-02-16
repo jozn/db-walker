@@ -3,9 +3,9 @@ package src
 import (
 	"database/sql"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"ms/sun/shared/helper"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 var XOLogDebug = func(s string, o ...interface{}) {
@@ -29,7 +29,7 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 		AUTO_INCREMENT sql.NullInt64
 	}{}
 	err = db.Unsafe().Select(&res2, sqlstr, schema, relkind)
-	helper.NoErr(err)
+	NoErr(err)
 
 	//fmt.Println("Mysql loader - load tables: ", res2)
 
@@ -58,7 +58,7 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 		}
 		res = append(res, t)
 	}
-	//helper.PertyPrint(res)
+	//PertyPrint(res)
 
 	return res, nil
 }
@@ -86,7 +86,7 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 	XOLogDebug(sqlstr, schema, tableName)
 
 	err = db.Unsafe().Select(&rows, sqlstr, schema, tableName)
-	helper.NoErr(err)
+	NoErr(err)
 	//fmt.Println("Mysql loader - load tables: ", rows)
 	for _, r := range rows {
 		//if this coulmn is auto_incermnt but not primiry this means: this table has one auto Seq columns
@@ -154,7 +154,7 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 	XOLogDebug(sqlstr, schema, tableName)
 	err = db.Select(&rows, sqlstr, schema, tableName)
 	if err != nil {
-		helper.NoErr(err)
+		NoErr(err)
 		return
 	}
 
@@ -183,7 +183,7 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 		XOLogDebug(sqlstr, schema, tableName, i.IndexName)
 		err = db.Unsafe().Select(&rs, sqlstr, schema, tableName, i.IndexName)
 		if err != nil {
-			helper.NoErr(err)
+			NoErr(err)
 			return
 		}
 
@@ -199,8 +199,8 @@ func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) 
 
 func indexName(index *Index, table *Table) string {
 	name := ""
-	//helper.PertyPrint(table)
-	//helper.PertyPrint(index)
+	//PertyPrint(table)
+	//PertyPrint(index)
 	if len(index.Columns) == 1 {
 		//name = "Get" + table.TableNameGo + "By" + index.Columns[0].ColumnName
 		name = "" + table.TableNameGo + "By" + index.Columns[0].ColumnNameCamel

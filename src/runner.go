@@ -6,7 +6,6 @@ import (
 
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"ms/sun/shared/helper"
 	"regexp"
 	"strings"
 )
@@ -17,12 +16,12 @@ func Run() {
 	DB, err := sqlx.Connect("mysql", "root:123456@tcp(localhost:3306)/sun?charset=utf8mb4")
 	DB.MapperFunc(func(s string) string { return s })
 	DB = DB.Unsafe()
-	helper.NoErr(err)
+	NoErr(err)
 
 	//OutPutBuffer := &GenOut{}
 	for _, db := range DATABASES {
 		tables, err := My_LoadTables(DB, db, "BASE TABLE")
-		helper.NoErr(err)
+		NoErr(err)
 		OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
 	}
 
@@ -45,9 +44,9 @@ func Run() {
 		}
 	}
 
-    helper.PertyPrint(OutPutBuffer.Tables)
+    PertyPrint(OutPutBuffer.Tables)
 	build(OutPutBuffer)
-	//helper.PertyPrint(OutPutBuffer.Tables)
+	//PertyPrint(OutPutBuffer.Tables)
 
 }
 
@@ -65,7 +64,7 @@ func addCockRoachTables(OutPutBuffer *GenOut) {
 	//OutPutBuffer := &GenOut{}
 	for _, db := range DATABASES_COCKROACHE {
 		tables, err := Roach_LoadTables(DB, db, "BASE TABLE")
-		helper.NoErr(err)
+		NoErr(err)
 		OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
 	}
 
@@ -85,12 +84,12 @@ func RunCockRoach_Play_Dep() {
 	//on PG we must lowercase coulmns names unlike the Myql which is upper case
 	DB.MapperFunc(func(s string) string { return strings.ToLower(s) })
 	DB = DB.Unsafe()
-	helper.NoErr(err)
+	NoErr(err)
 
 	//OutPutBuffer := &GenOut{}
 	for _, db := range DATABASES_COCKROACHE {
 		tables, err := Roach_LoadTables(DB, db, "BASE TABLE")
-		helper.NoErr(err)
+		NoErr(err)
 		OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
 	}
 
@@ -109,6 +108,6 @@ func RunCockRoach_Play_Dep() {
 	}
 
 	build(OutPutBuffer)
-	helper.PertyPrint(OutPutBuffer.Tables)
+	PertyPrint(OutPutBuffer.Tables)
 
 }

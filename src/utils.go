@@ -1,11 +1,12 @@
 package src
 
 import (
-	"github.com/knq/snaker"
 	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"github.com/knq/snaker"
 )
 
 //copy of "ms/xox/snaker"
