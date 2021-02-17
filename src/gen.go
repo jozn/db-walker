@@ -33,7 +33,7 @@ func build(gen *GenOut) {
 	writeOutput("TablePBCon.go", converter)
 	ioutil.WriteFile(OUTPUT_PROTO_DIR+"pb_tables.proto", []byte(PtMsgdef), os.ModeType)
 
-	if FORMAT {
+	if false && FORMAT {
         e1 := exec.Command("gofmt", "-w", OUTPUT_DIR_GO_X).Run()
         e2 := exec.Command("goimports", "-w", OUTPUT_DIR_GO_X).Run()
         NoErr(e1)
@@ -55,13 +55,15 @@ func genTablesOrma(tplName string, gen *GenOut) {
 
 func writeOutput(fileName, output string) {
 	//println(output)
+	os.MkdirAll(OUTPUT_DIR_GO_X,0777)
 	ioutil.WriteFile(OUTPUT_DIR_GO_X+fileName, []byte(output), os.ModeType)
 
 }
 
 func writeOutputConst(fileName, output string) {
     //println(output)
-    ioutil.WriteFile(OUTPUT_DIR_GO_X_CONST+fileName, []byte(output), os.ModeType)
+	os.MkdirAll(OUTPUT_DIR_GO_X_CONST,0777)
+	ioutil.WriteFile(OUTPUT_DIR_GO_X_CONST+fileName, []byte(output), os.ModeType)
 
 }
 

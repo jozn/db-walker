@@ -18,7 +18,6 @@ func ms_conds() []msCond {
 		msCond{"_GT", ">"},
 		msCond{"_GE", ">="},
 	}
-
 }
 
 func ms_str_cond() []msCond {
@@ -26,7 +25,6 @@ func ms_str_cond() []msCond {
 		msCond{"_Eq", "="},
 		msCond{"_NotEq", "!="},
 	}
-
 }
 
 func ms_in() []msCond {
@@ -34,7 +32,6 @@ func ms_in() []msCond {
 		msCond{"_In", " IN "},
 		msCond{"_NotIn", " NOT IN "},
 	}
-
 }
 
 func ms_gen_types() []string {
