@@ -195,4 +195,3 @@ func RoachTableIndexes(db *sqlx.DB, schema string, tableName string, table *Tabl
 
 	return res, nil
 }
-

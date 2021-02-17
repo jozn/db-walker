@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kr/pretty"
 	"github.com/hokaccha/go-prettyjson"
+	"github.com/kr/pretty"
 )
 
 func NoErr(err error) {

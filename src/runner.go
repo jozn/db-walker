@@ -31,12 +31,12 @@ func Run() {
 		table.Indexes, _ = MyTableIndexes(DB, table.DataBase, table.TableName, table)
 	}
 
-    // addCockRoachTables(OutPutBuffer)
+	// addCockRoachTables(OutPutBuffer)
 
-    for _, table := range OutPutBuffer.Tables {
-        if table.IsPG {
-            continue
-        }
+	for _, table := range OutPutBuffer.Tables {
+		if table.IsPG {
+			continue
+		}
 		if table.NeedTrigger {
 			OutPutBuffer.TablesTriggers = append(OutPutBuffer.TablesTriggers, table)
 		}
@@ -45,7 +45,7 @@ func Run() {
 		}
 	}
 
-    PertyPrint(OutPutBuffer.Tables)
+	PertyPrint(OutPutBuffer.Tables)
 	build(OutPutBuffer)
 	//PertyPrint(OutPutBuffer.Tables)
 
@@ -53,10 +53,10 @@ func Run() {
 
 func addCockRoachTables(OutPutBuffer *GenOut) {
 	DB, err := sqlx.Connect("postgres", "postgresql://root@localhost:26257?sslmode=disable")
-    if err != nil {
-        fmt.Println("cockroach connecting err: ", err)
-        return
-    }
+	if err != nil {
+		fmt.Println("cockroach connecting err: ", err)
+		return
+	}
 	fmt.Println(DB, err)
 	//on PG we must lowercase coulmns names unlike the Myql which is upper case
 	DB.MapperFunc(func(s string) string { return strings.ToLower(s) })
@@ -70,9 +70,9 @@ func addCockRoachTables(OutPutBuffer *GenOut) {
 	}
 
 	for _, table := range OutPutBuffer.Tables {
-	    if table.IsPG {
-            table.Columns, _ = Roach_LoadTableColumns(DB, table.DataBase, table.TableName, table)
-            table.Indexes, _ = RoachTableIndexes(DB, table.DataBase, table.TableName, table)
-        }
+		if table.IsPG {
+			table.Columns, _ = Roach_LoadTableColumns(DB, table.DataBase, table.TableName, table)
+			table.Indexes, _ = RoachTableIndexes(DB, table.DataBase, table.TableName, table)
+		}
 	}
 }

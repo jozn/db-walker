@@ -22,10 +22,10 @@ func build(gen *GenOut) {
 	writeOutput("triggers.sql", buildFromTemplate("triggers.sql", gen))
 	writeOutput("trigger.go", buildFromTemplate("trigger.go.tpl", gen))
 
-    writeOutput("_tables_lowers.sql", buildFromTemplate("_tables_lowers.sql", gen))
-    writeOutput("_tables_to_cockroach.sql", buildFromTemplate("_tables_to_cockroach.sql", gen))
+	writeOutput("_tables_lowers.sql", buildFromTemplate("_tables_lowers.sql", gen))
+	writeOutput("_tables_to_cockroach.sql", buildFromTemplate("_tables_to_cockroach.sql", gen))
 
-    writeOutputConst("tables.go", buildFromTemplate("const.go.tpl", gen))
+	writeOutputConst("tables.go", buildFromTemplate("const.go.tpl", gen))
 
 	genTablesOrma("orm.go.tpl", gen)
 
@@ -34,11 +34,11 @@ func build(gen *GenOut) {
 	ioutil.WriteFile(OUTPUT_PROTO_DIR+"pb_tables.proto", []byte(PtMsgdef), os.ModeType)
 
 	if false && FORMAT {
-        e1 := exec.Command("gofmt", "-w", OUTPUT_DIR_GO_X).Run()
-        e2 := exec.Command("goimports", "-w", OUTPUT_DIR_GO_X).Run()
-        NoErr(e1)
-        NoErr(e2)
-    }
+		e1 := exec.Command("gofmt", "-w", OUTPUT_DIR_GO_X).Run()
+		e2 := exec.Command("goimports", "-w", OUTPUT_DIR_GO_X).Run()
+		NoErr(e1)
+		NoErr(e2)
+	}
 }
 
 func genTablesOrma(tplName string, gen *GenOut) {
@@ -55,14 +55,14 @@ func genTablesOrma(tplName string, gen *GenOut) {
 
 func writeOutput(fileName, output string) {
 	//println(output)
-	os.MkdirAll(OUTPUT_DIR_GO_X,0777)
+	os.MkdirAll(OUTPUT_DIR_GO_X, 0777)
 	ioutil.WriteFile(OUTPUT_DIR_GO_X+fileName, []byte(output), os.ModeType)
 
 }
 
 func writeOutputConst(fileName, output string) {
-    //println(output)
-	os.MkdirAll(OUTPUT_DIR_GO_X_CONST,0777)
+	//println(output)
+	os.MkdirAll(OUTPUT_DIR_GO_X_CONST, 0777)
 	ioutil.WriteFile(OUTPUT_DIR_GO_X_CONST+fileName, []byte(output), os.ModeType)
 
 }

@@ -247,25 +247,24 @@ func sqlCockRoachToTypeToGoType(sqlType string) string {
 	var typ string
 
 	switch strings.ToLower(sqlType) {
-	case "string","uuid":
+	case "string", "uuid":
 		typ = "string"
 	case "bool":
 		typ = "bool"
-	case "int","serial":
+	case "int", "serial":
 		typ = "int"
 	case "json":
 		typ = "string"
 	case "bytes":
 		typ = "[]byte"
-	case "date","time","timestamp":
+	case "date", "time", "timestamp":
 		typ = "time.Time"
-    case "decimal":
-        typ = "float64"
-    case "float":
-        typ = "float64"
+	case "decimal":
+		typ = "float64"
+	case "float":
+		typ = "float64"
 
-
-    default:
+	default:
 		typ = "UNKNOWN_sqlToGo__" + typ
 	}
 
@@ -274,34 +273,32 @@ func sqlCockRoachToTypeToGoType(sqlType string) string {
 
 func goToCockRoachType(sqlType string) string {
 
-    var typ string
+	var typ string
 
-    switch strings.ToLower(sqlType) {
-    case "string":
-        typ = "string"
-    case "bool":
-        typ = "bool"
-    case "int":
-        typ = "int"
-    case "json":
-        typ = "string"
-    case "[]byte":
-        typ = "bytes"
-    //case "date","time","timestamp":
-    //    typ = "time.Time"
-    case "float32":
-        typ = "float64"
-    case "float64":
-        typ = "float"
+	switch strings.ToLower(sqlType) {
+	case "string":
+		typ = "string"
+	case "bool":
+		typ = "bool"
+	case "int":
+		typ = "int"
+	case "json":
+		typ = "string"
+	case "[]byte":
+		typ = "bytes"
+	//case "date","time","timestamp":
+	//    typ = "time.Time"
+	case "float32":
+		typ = "float64"
+	case "float64":
+		typ = "float"
 
+	default:
+		typ = "UNKNOWN_sqlToGo__" + typ
+	}
 
-    default:
-        typ = "UNKNOWN_sqlToGo__" + typ
-    }
-
-    return typ
+	return typ
 }
-
 
 var PrecScaleRE = regexp.MustCompile(`\(([0-9]+)(\s*,[0-9]+)?\)$`)
 

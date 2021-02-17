@@ -8,11 +8,6 @@ type GenOut struct {
 	GeneratedPbConverter string
 }
 
-//dep
-type DataBase struct {
-	Tables []Table
-}
-
 type Table struct {
 	TableName         string
 	Columns           []*Column
@@ -29,11 +24,11 @@ type Table struct {
 	TableNameJava     string
 	TableNamePB       string
 	ShortName         string
-	NeedTrigger       bool
+	NeedTrigger       bool   // MySql trigger events
 	XPrimaryKeyGoType string //shortcut
 	IsMysql           bool
-	IsPG              bool
-	Dollar            string
+	IsPG              bool   // Is PostgreSQL/CockroachDB
+	Dollar            string // Use ? For MySql
 }
 
 func (t *Table) ColNum() int {
@@ -45,7 +40,7 @@ type Column struct {
 	ColumnNameCamel string
 	ColumnNameSnake string //not used
 	SqlType         string
-	Seq             int
+	Seq             int // From 1
 	Comment         string
 	ColumnNameOut   string //dep: unclear what is the meaning
 	GoTypeOut       string
@@ -53,22 +48,10 @@ type Column struct {
 	GoDefaultOut    string
 	JavaTypeOut     string
 	PBTypeOut       string
-	StructTagOut    string
+	StructTagOut    string // For Go Json tag
 	IsNullAble      bool
 	IsPrimary       bool
 	IsUnique        bool
-}
-
-type ColumnType struct {
-	SqlType    string
-	GoType     string
-	GoFlatType string
-	JavaType   string
-	PBType     string
-}
-
-type PrimaryKey struct {
-	IsCompltive bool
 }
 
 type Index struct {
@@ -79,13 +62,6 @@ type Index struct {
 	SeqNo       int    // seq_no
 	Columns     []*Column
 	Table       *Table
-}
-
-// IndexColumn represents index column info.
-type IndexColumn struct {
-	SeqNo      int    // seq_no
-	Cid        int    // cid
-	ColumnName string // column_name
 }
 
 //////////////////////////////////////
@@ -100,16 +76,16 @@ func (t *Table) GetColumnByName(col string) *Column {
 }
 
 func (t *Column) ToCockroachColumns() string {
-    s:= t.ColumnNameSnake + " " + t.RoachTypeOut + " "
-    if t.IsPrimary {
-        s += "PRIMARY KEY "
-    }
-    if t.IsUnique {
-        s += "UNIQUE "
-    }
-    if !t.IsNullAble {
-        s += "NOT NULL "
-    }
+	s := t.ColumnNameSnake + " " + t.RoachTypeOut + " "
+	if t.IsPrimary {
+		s += "PRIMARY KEY "
+	}
+	if t.IsUnique {
+		s += "UNIQUE "
+	}
+	if !t.IsNullAble {
+		s += "NOT NULL "
+	}
 
-    return s
+	return s
 }

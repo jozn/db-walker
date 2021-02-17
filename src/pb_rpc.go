@@ -183,7 +183,7 @@ func MysqlParseTypeToProtoclBuffer(dt string, fromMysql bool) SqlToPBType {
 			PB:    "bool",
 		}
 
-	case "string","char", "varchar", "tinytext", "text", "mediumtext", "longtext":
+	case "string", "char", "varchar", "tinytext", "text", "mediumtext", "longtext":
 		res = SqlToPBType{
 			Go:    "string",
 			GoGen: "string",
