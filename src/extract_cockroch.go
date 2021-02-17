@@ -9,7 +9,7 @@ import (
 )
 
 // MyTables runs a custom query, returning results as Table.
-func Roach_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, err error) {
+func Cockroach_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, err error) {
 	// sql query
 	const sqlstr = `SELECT * ` +
 		`FROM information_schema.tables ` +
@@ -58,8 +58,8 @@ func Roach_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table,
 	return res, nil
 }
 
-// My_LoadTableColumns runs a custom query, returning results as Column.
-func Roach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Column, err error) {
+// MySQL_LoadTableColumns runs a custom query, returning results as Column.
+func Cockroach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Column, err error) {
 	var rows = []struct {
 		ORDINAL_POSITION int
 		COLUMN_NAME      string
@@ -127,8 +127,8 @@ func Roach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 	return res, nil
 }
 
-// MyTableIndexes runs a custom query, returning results as Index.
-func RoachTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Index, err error) {
+// MySQL_TableIndexes runs a custom query, returning results as Index.
+func Cockroach_TableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Index, err error) {
 	// sql query
 	var rows = []struct {
 		INDEX_NAME sql.NullString
@@ -144,7 +144,7 @@ func RoachTableIndexes(db *sqlx.DB, schema string, tableName string, table *Tabl
 	XOLogDebug(sqlstr, schema, tableName)
 	err = db.Unsafe().Select(&rows, sqlstr, schema, tableName)
 	if err != nil {
-		fmt.Println("RoachTableIndexes err: ", err)
+		fmt.Println("Cockroach_TableIndexes err: ", err)
 		return
 	}
 

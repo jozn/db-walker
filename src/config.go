@@ -1,7 +1,7 @@
 package src
 
 const (
-	TEMPLATES_DIR         = `./templates/`
+	TEMPLATES_DIR_GO      = `./templates/go/`
 	OUTPUT_DIR_GO_X       = `./out/shared/x/`
 	OUTPUT_DIR_GO_X_CONST = `./out/shared/x/xconst/`
 	OUTPUT_PROTO_DIR      = `./out/shared/proto/`

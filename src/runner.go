@@ -21,14 +21,14 @@ func Run() {
 
 	//OutPutBuffer := &GenOut{}
 	for _, db := range DATABASES {
-		tables, err := My_LoadTables(DB, db, "BASE TABLE")
+		tables, err := MySQL_LoadTables(DB, db, "BASE TABLE")
 		NoErr(err)
 		OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
 	}
 
 	for _, table := range OutPutBuffer.Tables {
-		table.Columns, _ = My_LoadTableColumns(DB, table.DataBase, table.TableName, table)
-		table.Indexes, _ = MyTableIndexes(DB, table.DataBase, table.TableName, table)
+		table.Columns, _ = MySQL_LoadTableColumns(DB, table.DataBase, table.TableName, table)
+		table.Indexes, _ = MySQL_TableIndexes(DB, table.DataBase, table.TableName, table)
 	}
 
 	// addCockRoachTables(OutPutBuffer)
@@ -46,7 +46,7 @@ func Run() {
 	}
 
 	PertyPrint(OutPutBuffer.Tables)
-	build(OutPutBuffer)
+	goBuild(OutPutBuffer)
 	//PertyPrint(OutPutBuffer.Tables)
 
 }
@@ -64,15 +64,15 @@ func addCockRoachTables(OutPutBuffer *GenOut) {
 
 	//OutPutBuffer := &GenOut{}
 	for _, db := range DATABASES_COCKROACHE {
-		tables, err := Roach_LoadTables(DB, db, "BASE TABLE")
+		tables, err := Cockroach_LoadTables(DB, db, "BASE TABLE")
 		NoErr(err)
 		OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
 	}
 
 	for _, table := range OutPutBuffer.Tables {
 		if table.IsPG {
-			table.Columns, _ = Roach_LoadTableColumns(DB, table.DataBase, table.TableName, table)
-			table.Indexes, _ = RoachTableIndexes(DB, table.DataBase, table.TableName, table)
+			table.Columns, _ = Cockroach_LoadTableColumns(DB, table.DataBase, table.TableName, table)
+			table.Indexes, _ = Cockroach_TableIndexes(DB, table.DataBase, table.TableName, table)
 		}
 	}
 }

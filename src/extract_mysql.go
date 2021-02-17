@@ -15,7 +15,7 @@ var XOLogDebug = func(s string, o ...interface{}) {
 }
 
 // MyTables runs a custom query, returning results as Table.
-func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, err error) {
+func MySQL_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, err error) {
 	// sql query
 	const sqlstr = `SELECT * ` +
 		`FROM information_schema.tables ` +
@@ -63,8 +63,8 @@ func My_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table, er
 	return res, nil
 }
 
-// My_LoadTableColumns runs a custom query, returning results as Column.
-func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Column, err error) {
+// MySQL_LoadTableColumns runs a custom query, returning results as Column.
+func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Column, err error) {
 	var rows = []struct {
 		ORDINAL_POSITION int
 		COLUMN_NAME      string
@@ -136,8 +136,8 @@ func My_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table *Ta
 	return res, nil
 }
 
-// MyTableIndexes runs a custom query, returning results as Index.
-func MyTableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Index, err error) {
+// MySQL_TableIndexes runs a custom query, returning results as Index.
+func MySQL_TableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Index, err error) {
 	// sql query
 	var rows = []struct {
 		INDEX_NAME string

@@ -8,29 +8,29 @@ import (
 	"text/template"
 )
 
-func build(gen *GenOut) {
+func goBuild(gen *GenOut) {
 
-	genModels(gen)
-	writeOutput("z_xo.go", buildFromTemplate("xo.go.tpl", gen))
-	//writeOutput("z_models.go", buildFromTemplate("models.go.tpl", gen))
-	writeOutput("z_cache.go", buildFromTemplate("cache.go.tpl", gen))
-	writeOutput("z_event.go", buildFromTemplate("event.go.tpl", gen))
-	writeOutput("z_manual.go", buildFromTemplate("manual.go", gen))
-	writeOutput("z_index.go", buildFromTemplate("index.go.tpl", gen))
-	writeOutput("z_cache_secondary_index.go", buildFromTemplate("cache_secondary_index.go.tpl", gen))
-	writeOutput("J.java", buildFromTemplate("J.java", gen))
-	writeOutput("triggers.sql", buildFromTemplate("triggers.sql", gen))
-	writeOutput("trigger.go", buildFromTemplate("trigger.go.tpl", gen))
+	goGenModels(gen)
+	goWriteOutput("z_xo.go", goBuildFromTemplate("xo.go.tpl", gen))
+	//goWriteOutput("z_models.go", goBuildFromTemplate("models.go.tpl", gen))
+	goWriteOutput("z_cache.go", goBuildFromTemplate("cache.go.tpl", gen))
+	goWriteOutput("z_event.go", goBuildFromTemplate("event.go.tpl", gen))
+	goWriteOutput("z_manual.go", goBuildFromTemplate("manual.go", gen))
+	goWriteOutput("z_index.go", goBuildFromTemplate("index.go.tpl", gen))
+	goWriteOutput("z_cache_secondary_index.go", goBuildFromTemplate("cache_secondary_index.go.tpl", gen))
+	goWriteOutput("J.java", goBuildFromTemplate("J.java", gen))
+	goWriteOutput("triggers.sql", goBuildFromTemplate("triggers.sql", gen))
+	goWriteOutput("trigger.go", goBuildFromTemplate("trigger.go.tpl", gen))
 
-	writeOutput("_tables_lowers.sql", buildFromTemplate("_tables_lowers.sql", gen))
-	writeOutput("_tables_to_cockroach.sql", buildFromTemplate("_tables_to_cockroach.sql", gen))
+	goWriteOutput("_tables_lowers.sql", goBuildFromTemplate("_tables_lowers.sql", gen))
+	goWriteOutput("_tables_to_cockroach.sql", goBuildFromTemplate("_tables_to_cockroach.sql", gen))
 
-	writeOutputConst("tables.go", buildFromTemplate("const.go.tpl", gen))
+	goWriteOutputConst("tables.go", goBuildFromTemplate("const.go.tpl", gen))
 
 	genTablesOrma("orm.go.tpl", gen)
 
 	PtMsgdef, converter := Gen_ProtosForTables(gen.Tables)
-	writeOutput("TablePBCon.go", converter)
+	goWriteOutput("TablePBCon.go", converter)
 	ioutil.WriteFile(OUTPUT_PROTO_DIR+"pb_tables.proto", []byte(PtMsgdef), os.ModeType)
 
 	if false && FORMAT {
@@ -48,29 +48,29 @@ func genTablesOrma(tplName string, gen *GenOut) {
 		buffer := bytes.NewBufferString("")
 		err := tpl.Execute(buffer, table)
 		NoErr(err)
-		writeOutput("zz_"+table.TableName+".go", buffer.String())
+		goWriteOutput("zz_"+table.TableName+".go", buffer.String())
 	}
 
 }
 
-func writeOutput(fileName, output string) {
+func goWriteOutput(fileName, output string) {
 	//println(output)
 	os.MkdirAll(OUTPUT_DIR_GO_X, 0777)
 	ioutil.WriteFile(OUTPUT_DIR_GO_X+fileName, []byte(output), os.ModeType)
 
 }
 
-func writeOutputConst(fileName, output string) {
+func goWriteOutputConst(fileName, output string) {
 	//println(output)
 	os.MkdirAll(OUTPUT_DIR_GO_X_CONST, 0777)
 	ioutil.WriteFile(OUTPUT_DIR_GO_X_CONST+fileName, []byte(output), os.ModeType)
 
 }
 
-func buildFromTemplate(tplName string, gen *GenOut) string {
+func goBuildFromTemplate(tplName string, gen *GenOut) string {
 	tpl := template.New("" + tplName)
 	tpl.Funcs(NewTemplateFuncs())
-	tplGoInterface, err := ioutil.ReadFile(TEMPLATES_DIR + tplName)
+	tplGoInterface, err := ioutil.ReadFile(TEMPLATES_DIR_GO + tplName)
 	NoErr(err)
 	tpl, err = tpl.Parse(string(tplGoInterface))
 	NoErr(err)
@@ -82,7 +82,7 @@ func buildFromTemplate(tplName string, gen *GenOut) string {
 	return buffer.String()
 }
 
-func genModels(gen *GenOut) {
+func goGenModels(gen *GenOut) {
 	tpl := _getTemplate("models.go.tpl")
 	tables := []*Table{}
 	for _, t := range gen.Tables {
@@ -94,13 +94,13 @@ func genModels(gen *GenOut) {
 	buffer := bytes.NewBufferString("")
 	err := tpl.Execute(buffer, tables)
 	NoErr(err)
-	writeOutput("z_models.go", buffer.String())
+	goWriteOutput("z_models.go", buffer.String())
 }
 
 func _getTemplate(tplName string) *template.Template {
 	tpl := template.New("" + tplName)
 	tpl.Funcs(NewTemplateFuncs())
-	tplGoInterface, err := ioutil.ReadFile(TEMPLATES_DIR + tplName)
+	tplGoInterface, err := ioutil.ReadFile(TEMPLATES_DIR_GO + tplName)
 	NoErr(err)
 	tpl, err = tpl.Parse(string(tplGoInterface))
 	NoErr(err)
