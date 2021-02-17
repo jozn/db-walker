@@ -46,7 +46,8 @@ func Run() {
 	}
 
 	PertyPrint(OutPutBuffer.Tables)
-	goBuild(OutPutBuffer)
+	rustBuild(OutPutBuffer)
+	//goBuild(OutPutBuffer)
 	//PertyPrint(OutPutBuffer.Tables)
 
 }

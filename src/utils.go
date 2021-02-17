@@ -242,6 +242,52 @@ switchDT:
 	return precision, nilVal, typ
 }
 
+var strip = regexp.MustCompile(`\(.*\)`)
+func sqlMySqlTypeToRustType(sqlType string) string {
+	stripType :=strings.ToLower(sqlType)
+	isUnsigned := false
+/*	stripType = strip.ReplaceAllString(sqlType,"")
+	print(sqlType)
+	print("=======")
+
+
+	isUnsigned := strings.Index(stripType,"unsigned") > 0
+	stripType = strings.Split(stripType," ")[0]*/
+	var typ string
+
+	print(stripType)
+	print("\n")
+	switch strings.ToLower(stripType) {
+	case "string", "uuid":
+		typ = "String"
+	case "bool":
+		typ = "bool"
+	case "bigint":
+		typ = "i64"
+	case "int", "serial":
+		typ = "u32"
+		if isUnsigned {
+			typ = "i32"
+		}
+	case "json","text":
+		typ = "String"
+	case "bytes":
+		typ = "Vec<u8>"
+	case "date", "time", "timestamp":
+		typ = "u32"
+	case "decimal":
+		typ = "f32"
+	case "float":
+		typ = "f64"
+
+	default:
+		typ = "UNKNOWN_sqlToRust__" + typ
+	}
+
+	return typ
+}
+
+
 func sqlCockRoachToTypeToGoType(sqlType string) string {
 
 	var typ string

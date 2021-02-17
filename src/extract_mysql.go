@@ -103,6 +103,8 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 		case "NO":
 			nullable = false
 		}
+
+		fmt.Println(r)
 		_, _, gotype := sqlTypeToGoType(r.COLUMN_TYPE, false)
 		t := &Column{
 			ColumnName:      r.COLUMN_NAME,
@@ -112,6 +114,7 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 			Comment:         r.COLUMN_COMMENT,
 			ColumnNameOut:   r.COLUMN_NAME,
 			SqlType:         r.COLUMN_TYPE,
+			SqlTypeStrip:         r.DATA_TYPE,
 			GoTypeOut:       gotype,
 			RoachTypeOut:    goToCockRoachType(gotype),
 			GoDefaultOut:    go_datatype_to_defualt_go_type(gotype),
@@ -119,6 +122,7 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 			PBTypeOut:       (gotype),
 			StructTagOut:    fmt.Sprintf("`db:\"%s\"`", r.COLUMN_NAME),
 			IsNullAble:      nullable,
+			RustTypeOut: sqlMySqlTypeToRustType(r.DATA_TYPE),
 		}
 
 		if strings.ToUpper(r.COLUMN_KEY) == "PRI" {

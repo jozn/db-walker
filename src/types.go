@@ -39,7 +39,8 @@ type Column struct {
 	ColumnName      string
 	ColumnNameCamel string
 	ColumnNameSnake string //not used
-	SqlType         string
+	SqlType         string // bigint(20) > NOT USED
+	SqlTypeStrip         string // bigint
 	Seq             int // From 1
 	Comment         string
 	ColumnNameOut   string //dep: unclear what is the meaning
@@ -52,6 +53,8 @@ type Column struct {
 	IsNullAble      bool
 	IsPrimary       bool
 	IsUnique        bool
+	//Rust
+	RustTypeOut string
 }
 
 type Index struct {
@@ -88,4 +91,8 @@ func (t *Column) ToCockroachColumns() string {
 	}
 
 	return s
+}
+
+func (t *Column) GetColIndex() int {
+	return t.Seq - 1
 }
