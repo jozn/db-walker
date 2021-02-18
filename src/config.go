@@ -6,8 +6,9 @@ const (
 	OUTPUT_DIR_GO_X_CONST = `./out/shared/x/xconst/`
 	OUTPUT_PROTO_DIR      = `./out/shared/proto/`
 
-	TEMPLATES_DIR_RUST      = `./templates/rust/`
-	OUTPUT_DIR_RUST       = `./out/rust/shared/x/`
+	TEMPLATES_DIR_RUST = `./templates/rust/`
+	OUTPUT_DIR_RUST    = `/hamid/life/_active/backbone/micro/tmp/src/`
+	//OUTPUT_DIR_RUST       = `./out/rust/shared/x/`
 
 	FORMAT = true
 )

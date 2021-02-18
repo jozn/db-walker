@@ -1,5 +1,10 @@
 package src
 
+import (
+	"fmt"
+	"strings"
+)
+
 type GenOut struct {
 	PackageName          string
 	Tables               []*Table
@@ -40,8 +45,8 @@ type Column struct {
 	ColumnNameCamel string
 	ColumnNameSnake string //not used
 	SqlType         string // bigint(20) > NOT USED
-	SqlTypeStrip         string // bigint
-	Seq             int // From 1
+	SqlTypeStrip    string // bigint
+	Seq             int    // From 1
 	Comment         string
 	ColumnNameOut   string //dep: unclear what is the meaning
 	GoTypeOut       string
@@ -93,6 +98,25 @@ func (t *Column) ToCockroachColumns() string {
 	return s
 }
 
+// For Rust
 func (t *Column) GetColIndex() int {
 	return t.Seq - 1
+}
+
+func (t *Table) GetRustParam() string {
+	arr := []string{}
+	for _, c := range t.Columns {
+		arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
+	}
+	return strings.Join(arr, ", ")
+}
+
+func (t *Table) GetRustParamNoPrimaryKey() string {
+	arr := []string{}
+	for _, c := range t.Columns {
+		if c.ColumnName != t.PrimaryKey.ColumnName {
+			arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
+		}
+	}
+	return strings.Join(arr, ", ")
 }
