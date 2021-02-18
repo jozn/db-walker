@@ -65,6 +65,21 @@ impl {{ .TableNameJava }} {
 {{ end }}
        Ok(cp)
     }
+
+    pub async fn delete(&self, pool: &Pool) -> Result<(),CWError> {
+
+        let mut conn = pool.get_conn().await.unwrap();
+
+        let query = r"DELETE FROM {{ $tableScheme }} WHERE {{ .PrimaryKey.ColumnName }} = ? ";
+        let p = Params::Positional(vec![self.{{ .PrimaryKey.ColumnName }}.clone().into()]);
+
+        conn.exec_drop(
+            query, p
+        ).await.unwrap();
+
+
+        Ok(())
+    }
 }
 
 {{end}}
