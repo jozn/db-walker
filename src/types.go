@@ -120,3 +120,13 @@ func (t *Table) GetRustParamNoPrimaryKey() string {
 	}
 	return strings.Join(arr, ", ")
 }
+
+func (t *Table) GetRustUpdateFrag() string {
+	arr := []string{}
+	for _, c := range t.Columns {
+		if c.ColumnName != t.PrimaryKey.ColumnName {
+			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
+		}
+	}
+	return strings.Join(arr, ", ")
+}

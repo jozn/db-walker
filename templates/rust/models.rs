@@ -41,7 +41,6 @@ impl FromRow for {{ .TableNameJava }} {
 
 impl {{ .TableNameJava }} {
     pub async fn insert(&self, pool: &Pool) -> Result<{{ .TableNameJava }},CWError> {
-
         let mut conn = pool.get_conn().await.unwrap();
 {{ if .IsAutoIncrement  }}
         let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .PrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .PrimaryKey.ColumnName }})";
@@ -66,8 +65,19 @@ impl {{ .TableNameJava }} {
        Ok(cp)
     }
 
-    pub async fn delete(&self, pool: &Pool) -> Result<(),CWError> {
+    pub async fn update(&self, pool: &Pool) -> Result<(),CWError> {
+        let mut conn = pool.get_conn().await.unwrap();
+        let query = r"UPDATE {{ $tableScheme }} SET {{ .GetRustUpdateFrag }} WHERE {{ .PrimaryKey.ColumnName }} = ? ";
+        let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }},  self.{{ .PrimaryKey.ColumnName }}.clone().into() ]);
 
+        let qr = conn.exec_iter(
+            query, p
+        ).await.unwrap();
+
+        Ok(())
+    }
+
+    pub async fn delete(&self, pool: &Pool) -> Result<(),CWError> {
         let mut conn = pool.get_conn().await.unwrap();
 
         let query = r"DELETE FROM {{ $tableScheme }} WHERE {{ .PrimaryKey.ColumnName }} = ? ";
@@ -76,7 +86,6 @@ impl {{ .TableNameJava }} {
         conn.exec_drop(
             query, p
         ).await.unwrap();
-
 
         Ok(())
     }
