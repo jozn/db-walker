@@ -8,15 +8,18 @@ import (
 type GenOut struct {
 	PackageName          string
 	Tables               []*Table
+	RustTables               []*Table
 	TablesTriggers       []*Table
 	GeneratedPb          string
 	GeneratedPbConverter string
 }
 
+// Note due to how our policy change from Go ro Rust, there could be some wired behaviour around primary keys
 type Table struct {
 	TableName         string
 	Columns           []*Column
 	HasPrimaryKey     bool
+	IsCompositePrimaryKey     bool
 	PrimaryKey        *Column
 	DataBase          string //or schema in PG or tablesapce in cassandra
 	Seq               int
@@ -34,6 +37,8 @@ type Table struct {
 	IsMysql           bool
 	IsPG              bool   // Is PostgreSQL/CockroachDB
 	Dollar            string // Use ? For MySql
+	// Rust
+	TableNameRust string
 }
 
 func (t *Table) ColNum() int {
@@ -59,7 +64,12 @@ type Column struct {
 	IsPrimary       bool
 	IsUnique        bool
 	//Rust
+	ColumnNameRust string
 	RustTypeOut string
+	TypeRustBorrow string //todo
+	WhereModifiersRust []WhereModifier //todo
+	WhereInsModifiersRust []WhereModifierIns //todo
+
 }
 
 type Index struct {
@@ -70,6 +80,23 @@ type Index struct {
 	SeqNo       int    // seq_no
 	Columns     []*Column
 	Table       *Table
+	// Rust
+	RustFuncName string // index_name
+}
+
+type WhereModifier struct {
+	Suffix    string
+	Prefix    string
+	Condition string
+	AndOr     string
+	FuncName  string
+}
+
+type WhereModifierIns struct {
+	Suffix   string
+	Prefix   string
+	AndOr    string
+	FuncName string
 }
 
 //////////////////////////////////////
@@ -103,6 +130,24 @@ func (t *Column) GetColIndex() int {
 	return t.Seq - 1
 }
 
+func (t *Column) IsNumber() bool {
+	res := false
+	switch t.RustTypeOut {
+	case "u64", "i64","u32", "i32", "f32", "f64":
+		res = true
+	}
+	return res
+}
+
+func (t *Column) IsString() bool {
+	res := false
+	switch t.GoTypeOut {
+	case "string":
+		res = true
+	}
+	return res
+}
+
 func (t *Table) GetRustParam() string {
 	arr := []string{}
 	for _, c := range t.Columns {
@@ -129,4 +174,52 @@ func (t *Table) GetRustUpdateFrag() string {
 		}
 	}
 	return strings.Join(arr, ", ")
+}
+
+
+////////////// Modifer for Rust /////////////
+
+func (c *Column) GetModifiersRust() (res []WhereModifier) {
+	add := func(m WhereModifier) {
+		if len(m.AndOr) > 0 {
+			m.FuncName = m.Prefix + "_" + c.ColumnNameRust + m.Suffix
+		} else {
+			m.FuncName = c.ColumnNameRust + m.Suffix
+		}
+		res = append(res, m)
+	}
+
+	for _, andOr := range []string{"", "AND", "OR"} {
+		if c.IsNumber() || c.IsString(){
+			pre := strings.ToLower(andOr)
+
+			add(WhereModifier{"_eq", strings.ToLower(andOr), "=", andOr, ""})
+
+			add(WhereModifier{"_lt", pre, "<", andOr, ""})
+			add(WhereModifier{"_le", pre, "<=", andOr, ""})
+			add(WhereModifier{"_gt", pre, ">", andOr, ""})
+			add(WhereModifier{"_ge", pre, ">=", andOr, ""})
+		}
+	}
+
+	return
+}
+
+func (c *Column) GetRustModifiersIns() (res []WhereModifierIns) {
+	add := func(m WhereModifierIns) {
+		if len(m.AndOr) > 0 {
+			m.FuncName = m.Prefix + "_" + c.ColumnNameRust + m.Suffix
+		} else {
+			m.FuncName = c.ColumnNameRust + m.Suffix
+		}
+		res = append(res, m)
+	}
+
+	for _, andOr := range []string{"", "AND", "OR"} {
+		if c.IsNumber() || c.IsString(){
+			add(WhereModifierIns{"_in", strings.ToLower(andOr), andOr, ""})
+		}
+	}
+
+	return
 }

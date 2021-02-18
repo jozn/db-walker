@@ -190,7 +190,7 @@ func Cockroach_TableIndexes(db *sqlx.DB, schema string, tableName string, table 
 				table.PrimaryKey = table.GetColumnByName(c.COLUMN_NAME)
 			}
 		}
-		i.FuncNameOut = indexName(i, table)
+		i.FuncNameOut = GoIndexName(i, table)
 		res = append(res, i)
 	}
 

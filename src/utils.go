@@ -249,8 +249,8 @@ func sqlMySqlTypeToRustType(sqlType string ) string {
 
 	var typ string
 
-	print(stripType)
-	print("\n")
+	//print(stripType)
+	//print("\n")
 	switch strings.ToLower(stripType) {
 	case "tinyint","smallint" ,"mediumint", "int", "integer":
 		typ = "u32"
@@ -278,6 +278,51 @@ func sqlMySqlTypeToRustType(sqlType string ) string {
 	}
 
 	return typ
+}
+
+// This is newer version
+func cqlTypesToRustType(sqlType string) (typ, org, def string) {
+	switch strings.ToLower(sqlType) {
+	case "string", "varchar", "char" , "text", "tinytext":
+		typ = "String"
+		org = "&str"
+		def = `"".to_string()`
+	case "bool","boolean":
+		typ = "bool"
+		org = "bool"
+		def = `false`
+	case "tinyint","smallint" ,"mediumint", "int", "integer":
+		typ = "u32"
+		org = "u32"
+		def = `0u32`
+	case "bigint":
+		typ = "u64"
+		org = "u64"
+		def = `0u64`
+	//case "bytes", "blob":
+	//	typ = "Blob"
+	//	org = "&Blob"
+	//	def = `Blob::new(vec![])`
+	case "binary", "blob" ,"mediumblob":
+		typ = "Vec<u8>"
+		org = "&Vec<u8>"
+		def = `vec![]`
+	case"decimal":
+		typ = "f64"
+		org = "f64"
+		def = `0f64`
+	case "float":
+		typ = "f32"
+		org = "f32"
+		def = `0f32`
+
+	default:
+		typ = "UNKNOWN_sqlToRust__" + typ
+		org = "UNKNOWN_sqlToRust__" + typ
+		def = `""`
+	}
+	//duration,timeuuid, uuid, map, tuple, set, list
+	return
 }
 
 

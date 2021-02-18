@@ -9,7 +9,7 @@ import (
 )
 
 var XOLogDebug = func(s string, o ...interface{}) {
-	if false {
+	if true {
 		fmt.Println(s, o)
 	}
 }
@@ -42,6 +42,7 @@ func MySQL_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table,
 			Seq:            i,
 			TableNameGo:    SingularizeIdentifier(r.TABLE_NAME), //,SnakeToCamel(r.TABLE_NAME),
 			TableNameJava:  SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
+			TableNameRust:  SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
 			//TableNamePB:    "PB_" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
 			TableNamePB: "" + SingularizeIdentifier(r.TABLE_NAME), //SnakeToCamel(r.TABLE_NAME),
 			ShortName:   shortname(r.TABLE_NAME, "err", "res", "sqlstr", "db", "XOLog"),
@@ -93,7 +94,7 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 		//so skip it from our entire genrated paradigram and make the table
 		if strings.ToLower(r.EXTRA) == "auto_increment" && strings.ToUpper(r.COLUMN_KEY) != "PRI" {
 			table.IsAutoIncrement = false
-			continue
+			continue // Skip this table in generated code
 		}
 
 		nullable := false
@@ -104,7 +105,8 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 			nullable = false
 		}
 
-		fmt.Println(r)
+		//fmt.Println(r)
+		typRs, typOrgRs, _ := cqlTypesToRustType(r.DATA_TYPE)
 		_, _, gotype := sqlTypeToGoType(r.COLUMN_TYPE, false)
 		t := &Column{
 			ColumnName:      r.COLUMN_NAME,
@@ -122,10 +124,16 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 			PBTypeOut:       (gotype),
 			StructTagOut:    fmt.Sprintf("`db:\"%s\"`", r.COLUMN_NAME),
 			IsNullAble:      nullable,
-			RustTypeOut: sqlMySqlTypeToRustType(r.DATA_TYPE),
+			// Rust
+			ColumnNameRust:      r.COLUMN_NAME,
+			RustTypeOut: typRs,
+			TypeRustBorrow: typOrgRs,
 		}
 
 		if strings.ToUpper(r.COLUMN_KEY) == "PRI" {
+			if table.HasPrimaryKey {
+				table.IsCompositePrimaryKey = true
+			}
 			table.HasPrimaryKey = true
 			table.PrimaryKey = t
 			t.IsPrimary = true
@@ -194,14 +202,15 @@ func MySQL_TableIndexes(db *sqlx.DB, schema string, tableName string, table *Tab
 		for _, c := range rs {
 			i.Columns = append(i.Columns, table.GetColumnByName(c.COLUMN_NAME))
 		}
-		i.FuncNameOut = indexName(i, table)
+		i.FuncNameOut = GoIndexName(i, table)
+		i.RustFuncName = RustIndexName(i, table)
 		res = append(res, i)
 	}
 
 	return res, nil
 }
 
-func indexName(index *Index, table *Table) string {
+func GoIndexName(index *Index, table *Table) string {
 	name := ""
 	//PertyPrint(table)
 	//PertyPrint(index)
@@ -216,6 +225,22 @@ func indexName(index *Index, table *Table) string {
 		//name = "Get" + table.TableNameGo + "By" + strings.Join(arr, "And")
 		name = "" + table.TableNameGo + "By" + strings.Join(arr, "And")
 	}
+
+	return name
+}
+
+// In rust version we use only index names for building fun names
+// format: tweet_media_[[media_type]]_IDX > only [[ ]] is used for nameing
+func RustIndexName(index *Index, table *Table) string {
+	name := ""
+	if index.IsPrimary {
+		name = "get_" + table.TableName + ""
+		return name
+	}
+	stripName :=  strings.Replace(index.IndexName,table.TableName + "_", "",-1)
+	stripName =  strings.Replace(stripName, "_IDX" , "",-1)
+
+	name = "get_" + table.TableName + "_" + stripName
 
 	return name
 }

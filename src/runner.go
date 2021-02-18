@@ -1,13 +1,13 @@
 package src
 
 import (
-	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"regexp"
 	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 var IntRE = regexp.MustCompile(`^int(32|64)?$`)
@@ -45,7 +45,24 @@ func Run() {
 		}
 	}
 
-	PertyPrint(OutPutBuffer.Tables)
+	// For Rust Filtering
+	for _, table := range OutPutBuffer.Tables {
+		if table.IsPG {
+			continue
+		}
+
+		// Add Modifires
+		for _, col := range table.Columns {
+			col.WhereModifiersRust = col.GetModifiersRust()
+			col.WhereInsModifiersRust = col.GetRustModifiersIns()
+		}
+
+		if table.HasPrimaryKey && !table.IsCompositePrimaryKey {
+			OutPutBuffer.RustTables = append(OutPutBuffer.RustTables, table)
+		}
+	}
+
+	PertyPrint(OutPutBuffer.RustTables)
 	rustBuild(OutPutBuffer)
 	//goBuild(OutPutBuffer)
 	//PertyPrint(OutPutBuffer.Tables)

@@ -3,6 +3,8 @@ use mysql_async::prelude::*;
 use mysql_async::{FromRowError, OptsBuilder, Params, Row, Pool};
 use mysql_common::row::ColumnIndex;
 
+use mysql_common::value::Value;
+
 use shared::xc::CWError;
 
 // Every Table Must Have Primary Keys to Be Included In This Output
@@ -91,4 +93,135 @@ impl {{ .TableNameJava }} {
     }
 }
 
+
+#[derive(Default, Debug)]
+pub struct {{ .TableNameJava }}Selector {
+    wheres: Vec<WhereClause>,
+    select_cols: Vec<&'static str>,
+    order_by:  Vec<&'static str>,
+    limit: u32,
+    offset: u32,
+}
+
+impl {{ .TableNameJava }}Selector {
+    pub fn new() -> Self {
+        {{ .TableNameJava }}Selector::default()
+    }
+
+    pub fn limit(&mut self, size: u32) -> &mut Self {
+        self.limit = size;
+        self
+    }
+
+    pub fn offset(&mut self, size: u32) -> &mut Self {
+        self.offset = size;
+        self
+    }
+
+    pub fn select_all(&mut self) -> &mut Self {
+        // Default is select *
+        self
+    }
+
+    //each column select
+    {{- range .Columns }}
+    pub fn select_{{ .ColumnNameRust }}(&mut self) -> &mut Self {
+        self.select_cols.push("{{.ColumnName}}");
+        self
+    }
+    {{ end }}
+
+    fn _to_cql(&self) ->  (String, Vec<Value>)  {
+        let cql_select = if self.select_cols.is_empty() {
+            "*".to_string()
+        } else {
+            self.select_cols.join(", ")
+        };
+
+        let mut cql_query = format!("SELECT {} FROM {{.TableSchemeOut}}", cql_select);
+
+        let (cql_where, where_values) = _get_where(self.wheres.clone());
+
+        if where_values.len() > 0 {
+            cql_query.push_str(&format!(" WHERE {}",&cql_where));
+        }
+
+        if self.order_by.len() > 0 {
+            let cql_orders = self.order_by.join(", ");
+            cql_query.push_str( &format!(" ORDER BY {}", &cql_orders));
+        };
+
+        if self.limit != 0  {
+            cql_query.push_str(&format!(" LIMIT {} ", self.limit));
+        };
+
+        if self.offset != 0  {
+            cql_query.push_str(&format!(" OFFSET {} ", self.offset));
+        };
+
+        (cql_query, where_values)
+    }
+
+    pub async fn _get_rows_with_size(&mut self, session: &Pool, size: i64) -> Result<Vec<{{ .TableNameRust }}>, CWError>   {
+        let mut conn = session.get_conn().await.unwrap();
+        let(cql_query, query_values) = self._to_cql();
+
+        println!("{} - {:?}", &cql_query, &query_values);
+
+        let p = Params::Positional(query_values);
+
+        let query_result = conn
+            .exec_map(
+                cql_query,p,
+                |obj: {{ .TableNameRust }}| obj
+            ).await.unwrap();
+
+        Ok(query_result)
+    }
+
+    pub async fn get_rows(&mut self, session: &Pool) -> Result<Vec<{{ .TableNameRust }}>, CWError>{
+        self._get_rows_with_size(session,-1).await
+    }
+
+    pub async fn get_row(&mut self, session: &Pool) -> Result<{{ .TableNameRust }}, CWError>{
+        let rows = self._get_rows_with_size(session,1).await?;
+
+        let opt = rows.get(0);
+        match opt {
+            Some(row) => Ok(row.to_owned()),
+            None => Err(CWError::NotFound)
+        }
+    }
+
+    // Modifiers
+
+    {{ .GetRustSelectorOrders }}
+
+    {{ .GetRustWheresTmplOut }}
+
+    //{* .GetRustWhereInsTmplOut *}
+
+}
 {{end}}
+
+
+///////////////// SHARED CODE ///////////
+#[derive(Debug, Clone)]
+pub struct WhereClause {
+    // pub condition: &'static str,
+    pub condition: String,
+    pub args: Value,
+}
+
+fn _get_where(wheres: Vec<WhereClause>) ->  (String, Vec<Value>) {
+    let mut values = vec![];
+    let  mut where_str = vec![];
+
+    for w in wheres {
+        where_str.push(w.condition);
+        values.push(w.args)
+    }
+    let cql_where = where_str.join(" ");
+
+    (cql_where, values)
+}
