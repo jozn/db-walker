@@ -5,7 +5,7 @@ use mysql_common::row::ColumnIndex;
 
 use mysql_common::value::Value;
 
-use shared::xc::CWError;
+//use crate::xc::CWError;
 
 // Every Table Must Have Primary Keys to Be Included In This Output
 // Primiay Keys must be one column (no compostion types yet)
@@ -33,7 +33,7 @@ impl FromRow for {{ .TableNameJava }} {
     {
         Ok({{ .TableNameJava }}  {
         {{- range .Columns }}
-            {{ .ColumnName }}: row.get({{ .GetColIndex }}).unwrap(),
+            {{ .ColumnName }}: row.get({{ .GetColIndex }}).unwrap_or_default(),
         {{- end }}
         })
     }
@@ -42,15 +42,15 @@ impl FromRow for {{ .TableNameJava }} {
 {{- $tableScheme := .TableSchemeOut }}
 
 impl {{ .TableNameJava }} {
-    pub async fn insert(&self, pool: &Pool) -> Result<{{ .TableNameJava }},CWError> {
-        let mut conn = pool.get_conn().await.unwrap();
+    pub async fn insert(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
+        let mut conn = pool.get_conn().await?;
 {{ if .IsAutoIncrement  }}
         let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .PrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .PrimaryKey.ColumnName }})";
         let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }}]);
 
         let qr = conn.exec_iter(
             query, p
-        ).await.unwrap();
+        ).await?;
 
         let mut cp = self.clone();
         cp.{{ .PrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .PrimaryKey.RustTypeOut }};
@@ -60,34 +60,34 @@ impl {{ .TableNameJava }} {
 
         conn.exec_iter(
             query, p
-        ).await.unwrap();
+        ).await?;
 
         let cp = self.clone();
 {{ end }}
        Ok(cp)
     }
 
-    pub async fn update(&self, pool: &Pool) -> Result<(),CWError> {
-        let mut conn = pool.get_conn().await.unwrap();
+    pub async fn update(&self, pool: &Pool) -> Result<(),MyError> {
+        let mut conn = pool.get_conn().await?;
         let query = r"UPDATE {{ $tableScheme }} SET {{ .GetRustUpdateFrag }} WHERE {{ .PrimaryKey.ColumnName }} = ? ";
         let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }},  self.{{ .PrimaryKey.ColumnName }}.clone().into() ]);
 
         let qr = conn.exec_iter(
             query, p
-        ).await.unwrap();
+        ).await?;
 
         Ok(())
     }
 
-    pub async fn delete(&self, pool: &Pool) -> Result<(),CWError> {
-        let mut conn = pool.get_conn().await.unwrap();
+    pub async fn delete(&self, pool: &Pool) -> Result<(),MyError> {
+        let mut conn = pool.get_conn().await?;
 
         let query = r"DELETE FROM {{ $tableScheme }} WHERE {{ .PrimaryKey.ColumnName }} = ? ";
         let p = Params::Positional(vec![self.{{ .PrimaryKey.ColumnName }}.clone().into()]);
 
         conn.exec_drop(
             query, p
-        ).await.unwrap();
+        ).await?;
 
         Ok(())
     }
@@ -162,8 +162,8 @@ impl {{ .TableNameJava }}Selector {
         (cql_query, where_values)
     }
 
-    pub async fn _get_rows_with_size(&mut self, session: &Pool, size: i64) -> Result<Vec<{{ .TableNameRust }}>, CWError>   {
-        let mut conn = session.get_conn().await.unwrap();
+    pub async fn _get_rows_with_size(&mut self, session: &Pool, size: i64) -> Result<Vec<{{ .TableNameRust }}>, MyError>   {
+        let mut conn = session.get_conn().await?;
         let(cql_query, query_values) = self._to_cql();
 
         println!("{} - {:?}", &cql_query, &query_values);
@@ -174,22 +174,22 @@ impl {{ .TableNameJava }}Selector {
             .exec_map(
                 cql_query,p,
                 |obj: {{ .TableNameRust }}| obj
-            ).await.unwrap();
+            ).await?;
 
         Ok(query_result)
     }
 
-    pub async fn get_rows(&mut self, session: &Pool) -> Result<Vec<{{ .TableNameRust }}>, CWError>{
+    pub async fn get_rows(&mut self, session: &Pool) -> Result<Vec<{{ .TableNameRust }}>, MyError>{
         self._get_rows_with_size(session,-1).await
     }
 
-    pub async fn get_row(&mut self, session: &Pool) -> Result<{{ .TableNameRust }}, CWError>{
+    pub async fn get_row(&mut self, session: &Pool) -> Result<{{ .TableNameRust }}, MyError>{
         let rows = self._get_rows_with_size(session,1).await?;
 
         let opt = rows.get(0);
         match opt {
             Some(row) => Ok(row.to_owned()),
-            None => Err(CWError::NotFound)
+            None => Err(MyError::NotFound)
         }
     }
 
@@ -225,3 +225,16 @@ fn _get_where(wheres: Vec<WhereClause>) ->  (String, Vec<Value>) {
 
     (cql_where, values)
 }
+
+#[derive(Debug)]
+pub enum MyError { // MySQL Error
+    NotFound,
+    MySqlError(mysql_async::Error),
+}
+
+impl From<mysql_async::Error> for MyError{
+    fn from(err: mysql_async::Error) -> Self {
+        MyError::MySqlError(err)
+    }
+}
+
