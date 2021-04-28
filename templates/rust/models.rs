@@ -42,7 +42,7 @@ impl FromRow for {{ .TableNameJava }} {
 {{- $tableScheme := .TableSchemeOut }}
 
 impl {{ .TableNameJava }} {
-    pub async fn insert(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
+    pub async fn replace(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
         let mut conn = pool.get_conn().await?;
 {{ if .IsAutoIncrement  }}
         let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .PrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .PrimaryKey.ColumnName }})";
@@ -55,7 +55,7 @@ impl {{ .TableNameJava }} {
         let mut cp = self.clone();
         cp.{{ .PrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .PrimaryKey.RustTypeOut }};
 {{ else }}
-        let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns}}) VALUES ({{ colvals_dollar . .Columns}})";
+        let query = r"REPLACE INTO {{ $tableScheme }} ({{ colnames .PrimaryKeys}}) VALUES ({{ colvals_dollar . .PrimaryKeys}})";
         let p = Params::Positional(vec![{{ .GetRustParam }}]);
 
         conn.exec_iter(
@@ -69,7 +69,7 @@ impl {{ .TableNameJava }} {
 
     pub async fn update(&self, pool: &Pool) -> Result<(),MyError> {
         let mut conn = pool.get_conn().await?;
-        let query = r"UPDATE {{ $tableScheme }} SET {{ .GetRustUpdateFrag }} WHERE {{ .PrimaryKey.ColumnName }} = ? ";
+        let query = r"UPDATE {{ $tableScheme }} SET {{ .GetRustUpdateFrag }} WHERE {{ .GetRustUpdateKeysWhereFrag }} ";
         let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }},  self.{{ .PrimaryKey.ColumnName }}.clone().into() ]);
 
         let qr = conn.exec_iter(
@@ -82,7 +82,7 @@ impl {{ .TableNameJava }} {
     pub async fn delete(&self, pool: &Pool) -> Result<(),MyError> {
         let mut conn = pool.get_conn().await?;
 
-        let query = r"DELETE FROM {{ $tableScheme }} WHERE {{ .PrimaryKey.ColumnName }} = ? ";
+        let query = r"DELETE FROM {{ $tableScheme }} WHERE {{ .GetRustUpdateKeysWhereFrag }} ";
         let p = Params::Positional(vec![self.{{ .PrimaryKey.ColumnName }}.clone().into()]);
 
         conn.exec_drop(

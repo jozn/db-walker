@@ -2,9 +2,10 @@ package src
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"regexp"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -14,10 +15,12 @@ var IntRE = regexp.MustCompile(`^int(32|64)?$`)
 
 func Run() {
 	//DB, err := sqlx.Connect("mysql", "root:123456@tcp(localhost:3306)/sun?charset=utf8mb4")
-	DB, err := sqlx.Connect("mysql", "root:123456@tcp(37.152.187.1:3306)/twitter?charset=utf8mb4")
+	// DB, err := sqlx.Connect("mysql", "root:123456@tcp(37.152.187.1:3306)/twitter?charset=utf8mb4")
+	// DB, err := sqlx.Connect("mysql", "root:12345678@tcp(130.185.120.132:3306)/twitter?charset=utf8mb4")
+	DB, err := sqlx.Connect("mysql", "flipper:12345678@tcp(192.168.43.116:3306)/flip?charset=utf8mb4")
+	NoErr(err)
 	DB.MapperFunc(func(s string) string { return s })
 	DB = DB.Unsafe()
-	NoErr(err)
 
 	//OutPutBuffer := &GenOut{}
 	for _, db := range DATABASES {
@@ -57,7 +60,7 @@ func Run() {
 			col.WhereInsModifiersRust = col.GetRustModifiersIns()
 		}
 
-		if table.HasPrimaryKey && !table.IsCompositePrimaryKey {
+		if table.HasPrimaryKey /*&& !table.IsCompositePrimaryKey*/ {
 			OutPutBuffer.RustTables = append(OutPutBuffer.RustTables, table)
 		}
 	}

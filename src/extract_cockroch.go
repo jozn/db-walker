@@ -107,7 +107,7 @@ func Cockroach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, ta
 			Comment:         "",
 			ColumnNameOut:   r.COLUMN_NAME,
 			SqlType:         r.DATA_TYPE,
-			SqlTypeStrip:         r.DATA_TYPE, // todo: is this correct > we added this field fro mysql
+			SqlTypeStrip:    r.DATA_TYPE, // todo: is this correct > we added this field fro mysql
 			GoTypeOut:       gotype,
 			RoachTypeOut:    r.DATA_TYPE,
 			GoDefaultOut:    go_datatype_to_defualt_go_type(gotype),

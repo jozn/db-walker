@@ -8,7 +8,7 @@ import (
 type GenOut struct {
 	PackageName          string
 	Tables               []*Table
-	RustTables               []*Table
+	RustTables           []*Table
 	TablesTriggers       []*Table
 	GeneratedPb          string
 	GeneratedPbConverter string
@@ -16,27 +16,28 @@ type GenOut struct {
 
 // Note due to how our policy change from Go ro Rust, there could be some wired behaviour around primary keys
 type Table struct {
-	TableName         string
-	Columns           []*Column
-	HasPrimaryKey     bool
-	IsCompositePrimaryKey     bool
-	PrimaryKey        *Column
-	DataBase          string //or schema in PG or tablesapce in cassandra
-	Seq               int
-	Comment           string
-	IsAutoIncrement   bool
-	Indexes           []*Index
-	TableSchemeOut    string //with table "`ms`.`post`"
-	TableNameSql      string //"post"
-	TableNameGo       string
-	TableNameJava     string
-	TableNamePB       string
-	ShortName         string
-	NeedTrigger       bool   // MySql trigger events
-	XPrimaryKeyGoType string //shortcut
-	IsMysql           bool
-	IsPG              bool   // Is PostgreSQL/CockroachDB
-	Dollar            string // Use ? For MySql
+	TableName             string
+	Columns               []*Column
+	HasPrimaryKey         bool
+	IsCompositePrimaryKey bool
+	PrimaryKey            *Column
+	PrimaryKeys           []*Column //used for composite keys -- Note: not used in gen as
+	DataBase              string    //or schema in PG or tablesapce in cassandra
+	Seq                   int
+	Comment               string
+	IsAutoIncrement       bool
+	Indexes               []*Index
+	TableSchemeOut        string //with table "`ms`.`post`"
+	TableNameSql          string //"post"
+	TableNameGo           string
+	TableNameJava         string
+	TableNamePB           string
+	ShortName             string
+	NeedTrigger           bool   // MySql trigger events
+	XPrimaryKeyGoType     string //shortcut
+	IsMysql               bool
+	IsPG                  bool   // Is PostgreSQL/CockroachDB
+	Dollar                string // Use ? For MySql
 	// Rust
 	TableNameRust string
 }
@@ -64,10 +65,10 @@ type Column struct {
 	IsPrimary       bool
 	IsUnique        bool
 	//Rust
-	ColumnNameRust string
-	RustTypeOut string
-	TypeRustBorrow string //todo
-	WhereModifiersRust []WhereModifier //todo
+	ColumnNameRust        string
+	RustTypeOut           string
+	TypeRustBorrow        string             //todo
+	WhereModifiersRust    []WhereModifier    //todo
 	WhereInsModifiersRust []WhereModifierIns //todo
 
 }
@@ -133,7 +134,7 @@ func (t *Column) GetColIndex() int {
 func (t *Column) IsNumber() bool {
 	res := false
 	switch t.RustTypeOut {
-	case "u64", "i64","u32", "i32", "f32", "f64":
+	case "u64", "i64", "u32", "i32", "f32", "f64":
 		res = true
 	}
 	return res
@@ -169,14 +170,23 @@ func (t *Table) GetRustParamNoPrimaryKey() string {
 func (t *Table) GetRustUpdateFrag() string {
 	arr := []string{}
 	for _, c := range t.Columns {
-		if c.ColumnName != t.PrimaryKey.ColumnName {
+		if !c.IsPrimary {
 			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
 		}
+		/*if c.ColumnName != t.PrimaryKey.ColumnName {
+			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
+		}*/
 	}
 	return strings.Join(arr, ", ")
 }
 
-
+func (t *Table) GetRustUpdateKeysWhereFrag() string {
+	arr := []string{}
+	for _, c := range t.PrimaryKeys {
+		arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
+	}
+	return strings.Join(arr, " AND ")
+}
 ////////////// Modifer for Rust /////////////
 
 func (c *Column) GetModifiersRust() (res []WhereModifier) {
@@ -190,7 +200,7 @@ func (c *Column) GetModifiersRust() (res []WhereModifier) {
 	}
 
 	for _, andOr := range []string{"", "AND", "OR"} {
-		if c.IsNumber() || c.IsString(){
+		if c.IsNumber() || c.IsString() {
 			pre := strings.ToLower(andOr)
 
 			add(WhereModifier{"_eq", strings.ToLower(andOr), "=", andOr, ""})
@@ -216,7 +226,7 @@ func (c *Column) GetRustModifiersIns() (res []WhereModifierIns) {
 	}
 
 	for _, andOr := range []string{"", "AND", "OR"} {
-		if c.IsNumber() || c.IsString(){
+		if c.IsNumber() || c.IsString() {
 			add(WhereModifierIns{"_in", strings.ToLower(andOr), andOr, ""})
 		}
 	}

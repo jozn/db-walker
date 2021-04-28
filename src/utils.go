@@ -243,8 +243,9 @@ switchDT:
 }
 
 var strip = regexp.MustCompile(`\(.*\)`)
-func sqlMySqlTypeToRustType(sqlType string ) string {
-	stripType :=strings.ToLower(sqlType)
+
+func sqlMySqlTypeToRustType(sqlType string) string {
+	stripType := strings.ToLower(sqlType)
 	isUnsigned := false //strings.Index(sqlTypeWithLen,"unsigned") > 0
 
 	var typ string
@@ -252,7 +253,7 @@ func sqlMySqlTypeToRustType(sqlType string ) string {
 	//print(stripType)
 	//print("\n")
 	switch strings.ToLower(stripType) {
-	case "tinyint","smallint" ,"mediumint", "int", "integer":
+	case "tinyint", "smallint", "mediumint", "int", "integer":
 		typ = "u32"
 		if isUnsigned {
 			typ = "i32"
@@ -264,11 +265,11 @@ func sqlMySqlTypeToRustType(sqlType string ) string {
 	case "float":
 		typ = "f64"
 
-	case "string", "varchar", "char" , "text", "tinytext":
+	case "string", "varchar", "char", "text", "tinytext":
 		typ = "String"
-	case "bool","boolean":
+	case "bool", "boolean":
 		typ = "bool"
-	case "binary", "blob" ,"mediumblob":
+	case "binary", "blob", "mediumblob":
 		typ = "Vec<u8>"
 	case "date", "time", "timestamp":
 		//typ = "u32"
@@ -283,15 +284,15 @@ func sqlMySqlTypeToRustType(sqlType string ) string {
 // This is newer version
 func cqlTypesToRustType(sqlType string) (typ, org, def string) {
 	switch strings.ToLower(sqlType) {
-	case "string", "varchar", "char" , "text", "tinytext":
+	case "string", "varchar", "char", "text", "tinytext":
 		typ = "String"
 		org = "&str"
 		def = `"".to_string()`
-	case "bool","boolean":
+	case "bool", "boolean":
 		typ = "bool"
 		org = "bool"
 		def = `false`
-	case "tinyint","smallint" ,"mediumint", "int", "integer":
+	case "tinyint", "smallint", "mediumint", "int", "integer":
 		typ = "u32"
 		org = "u32"
 		def = `0u32`
@@ -303,11 +304,11 @@ func cqlTypesToRustType(sqlType string) (typ, org, def string) {
 	//	typ = "Blob"
 	//	org = "&Blob"
 	//	def = `Blob::new(vec![])`
-	case "binary", "blob" ,"mediumblob":
+	case "binary", "blob", "mediumblob":
 		typ = "Vec<u8>"
 		org = "&Vec<u8>"
 		def = `vec![]`
-	case"decimal":
+	case "decimal":
 		typ = "f64"
 		org = "f64"
 		def = `0f64`
@@ -324,7 +325,6 @@ func cqlTypesToRustType(sqlType string) (typ, org, def string) {
 	//duration,timeuuid, uuid, map, tuple, set, list
 	return
 }
-
 
 func sqlCockRoachToTypeToGoType(sqlType string) string {
 

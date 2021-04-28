@@ -108,7 +108,7 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 		//fmt.Println(r)
 		typRs, typOrgRs, _ := cqlTypesToRustType(r.DATA_TYPE)
 		_, _, gotype := sqlTypeToGoType(r.COLUMN_TYPE, false)
-		t := &Column{
+		col := &Column{
 			ColumnName:      r.COLUMN_NAME,
 			ColumnNameCamel: SnakeToCamel(r.COLUMN_NAME),
 			ColumnNameSnake: ToSnake(r.COLUMN_NAME),
@@ -116,7 +116,7 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 			Comment:         r.COLUMN_COMMENT,
 			ColumnNameOut:   r.COLUMN_NAME,
 			SqlType:         r.COLUMN_TYPE,
-			SqlTypeStrip:         r.DATA_TYPE,
+			SqlTypeStrip:    r.DATA_TYPE,
 			GoTypeOut:       gotype,
 			RoachTypeOut:    goToCockRoachType(gotype),
 			GoDefaultOut:    go_datatype_to_defualt_go_type(gotype),
@@ -125,24 +125,25 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 			StructTagOut:    fmt.Sprintf("`db:\"%s\"`", r.COLUMN_NAME),
 			IsNullAble:      nullable,
 			// Rust
-			ColumnNameRust:      r.COLUMN_NAME,
-			RustTypeOut: typRs,
+			ColumnNameRust: r.COLUMN_NAME,
+			RustTypeOut:    typRs,
 			TypeRustBorrow: typOrgRs,
 		}
 
 		if strings.ToUpper(r.COLUMN_KEY) == "PRI" {
+			col.IsPrimary = true
 			if table.HasPrimaryKey {
 				table.IsCompositePrimaryKey = true
 			}
 			table.HasPrimaryKey = true
-			table.PrimaryKey = t
-			t.IsPrimary = true
+			table.PrimaryKey = col
+			table.PrimaryKeys = append(table.PrimaryKeys, col)
 		}
 		if strings.ToUpper(r.COLUMN_KEY) == "UNI" {
-			t.IsUnique = true
+			col.IsUnique = true
 		}
-		//fmt.Println("Mysql loader - load tables: ))))))) ", t)
-		res = append(res, t)
+		//fmt.Println("Mysql loader - load tables: ))))))) ", col)
+		res = append(res, col)
 	}
 
 	return res, nil
@@ -237,8 +238,8 @@ func RustIndexName(index *Index, table *Table) string {
 		name = "get_" + table.TableName + ""
 		return name
 	}
-	stripName :=  strings.Replace(index.IndexName,table.TableName + "_", "",-1)
-	stripName =  strings.Replace(stripName, "_IDX" , "",-1)
+	stripName := strings.Replace(index.IndexName, table.TableName+"_", "", -1)
+	stripName = strings.Replace(stripName, "_IDX", "", -1)
 
 	name = "get_" + table.TableName + "_" + stripName
 
