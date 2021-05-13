@@ -26,6 +26,8 @@ func MySQL_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table,
 
 	var res2 = []struct {
 		TABLE_NAME     string //`json:"rec_created_by"  db:"TABLE_NAME"`
+		// Note: This filed just is the counter for auto_increment, in newly created tables this is null even if
+		//	the table has auto_increment column, use EXTRA column in inforamation_schema
 		AUTO_INCREMENT sql.NullInt64
 	}{}
 	err = db.Unsafe().Select(&res2, sqlstr, schema, relkind)
@@ -92,9 +94,10 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 	for _, r := range rows {
 		//if this coulmn is auto_incermnt but not primiry this means: this table has one auto Seq columns
 		//so skip it from our entire genrated paradigram and make the table
+		// Updated in Rust version: we do not support this functionality anymore > commented
 		if strings.ToLower(r.EXTRA) == "auto_increment" && strings.ToUpper(r.COLUMN_KEY) != "PRI" {
-			table.IsAutoIncrement = false
-			continue // Skip this table in generated code
+			//table.IsAutoIncrement = false
+			//continue // Skip this table in generated code
 		}
 
 		nullable := false
@@ -141,6 +144,10 @@ func MySQL_LoadTableColumns(db *sqlx.DB, schema string, tableName string, table 
 		}
 		if strings.ToUpper(r.COLUMN_KEY) == "UNI" {
 			col.IsUnique = true
+		}
+		if strings.ToLower(r.EXTRA) == "auto_increment" {
+			col.IsAutoIncrement = true
+			table.IsAutoIncrement = true
 		}
 		//fmt.Println("Mysql loader - load tables: ))))))) ", col)
 		res = append(res, col)

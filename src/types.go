@@ -64,6 +64,7 @@ type Column struct {
 	IsNullAble      bool
 	IsPrimary       bool
 	IsUnique        bool
+	IsAutoIncrement bool
 	//Rust
 	ColumnNameRust        string
 	RustTypeOut           string

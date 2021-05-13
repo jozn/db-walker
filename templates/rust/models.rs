@@ -42,7 +42,39 @@ impl FromRow for {{ .TableNameJava }} {
 {{- $tableScheme := .TableSchemeOut }}
 
 impl {{ .TableNameJava }} {
+
+{{- if .IsAutoIncrement  }}
+    pub async fn insert(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
+        let mut conn = pool.get_conn().await?;
+
+        let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .PrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .PrimaryKey.ColumnName }})";
+        let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }}]);
+
+        let qr = conn.exec_iter(
+            query, p
+        ).await?;
+
+        let mut cp = self.clone();
+        cp.{{ .PrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .PrimaryKey.RustTypeOut }};
+        Ok(cp)
+    }
+{{ else }}
     pub async fn replace(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
+        let mut conn = pool.get_conn().await?;
+
+        let query = r"REPLACE INTO {{ $tableScheme }} ({{ colnames .Columns }}) VALUES ({{ colvals_dollar . .Columns }})";
+        let p = Params::Positional(vec![{{ .GetRustParam }}]);
+
+        conn.exec_iter(
+            query, p
+        ).await?;
+
+        let cp = self.clone();
+        Ok(cp)
+    }
+{{- end }}
+
+    pub async fn replace_dep(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
         let mut conn = pool.get_conn().await?;
 {{ if .IsAutoIncrement  }}
         let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .PrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .PrimaryKey.ColumnName }})";

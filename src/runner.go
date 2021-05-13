@@ -17,7 +17,7 @@ func Run() {
 	//DB, err := sqlx.Connect("mysql", "root:123456@tcp(localhost:3306)/sun?charset=utf8mb4")
 	// DB, err := sqlx.Connect("mysql", "root:123456@tcp(37.152.187.1:3306)/twitter?charset=utf8mb4")
 	// DB, err := sqlx.Connect("mysql", "root:12345678@tcp(130.185.120.132:3306)/twitter?charset=utf8mb4")
-	DB, err := sqlx.Connect("mysql", "flipper:12345678@tcp(192.168.43.116:3306)/flip?charset=utf8mb4")
+	DB, err := sqlx.Connect("mysql", "flipper:12345678@tcp(192.168.193.115:3306)/flip_my?charset=utf8mb4")
 	NoErr(err)
 	DB.MapperFunc(func(s string) string { return s })
 	DB = DB.Unsafe()

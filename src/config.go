@@ -7,13 +7,13 @@ const (
 	OUTPUT_PROTO_DIR      = `./out/shared/proto/`
 
 	TEMPLATES_DIR_RUST = `./templates/rust/`
-	OUTPUT_DIR_RUST    = `/hamid/life/_active/backbone/lib/shared/src/gen/my_debug/`
+	OUTPUT_DIR_RUST    = `/hamid/life/_active/backbone/lib/shared/src/gen/my/`
 	//OUTPUT_DIR_RUST       = `./out/rust/shared/x/`
 
 	FORMAT = true
 )
 
-var DATABASES = []string{"flip", "flip_tg"}
+var DATABASES = []string{"flip_my", "flip_tg"}
 
 var DATABASES_COCKROACHE = []string{"suncdb"}
 

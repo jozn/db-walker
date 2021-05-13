@@ -66,7 +66,7 @@ func rustGenModels(gen *GenOut) {
 	buffer := bytes.NewBufferString("")
 	err := tpl.Execute(buffer, tables)
 	NoErr(err)
-	rustWriteOutput("models.rs", buffer.String())
+	rustWriteOutput("mysql_models.rs", buffer.String())
 }
 
 func _rustGetTemplate(tplName string) *template.Template {

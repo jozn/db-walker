@@ -269,13 +269,13 @@ func sqlMySqlTypeToRustType(sqlType string) string {
 		typ = "String"
 	case "bool", "boolean":
 		typ = "bool"
-	case "binary", "blob", "mediumblob":
+	case "binary", "blob", "mediumblob", "longblob":
 		typ = "Vec<u8>"
 	case "date", "time", "timestamp":
 		//typ = "u32"
 		typ = "NO_DATE_IS_SUPPORTED"
 	default:
-		typ = "UNKNOWN_sqlToRust__" + typ
+		typ = "UNKNOWN_sqlToRust__" + stripType
 	}
 
 	return typ
@@ -304,7 +304,7 @@ func cqlTypesToRustType(sqlType string) (typ, org, def string) {
 	//	typ = "Blob"
 	//	org = "&Blob"
 	//	def = `Blob::new(vec![])`
-	case "binary", "blob", "mediumblob":
+	case "binary", "blob", "mediumblob", "longblob":
 		typ = "Vec<u8>"
 		org = "&Vec<u8>"
 		def = `vec![]`
@@ -318,8 +318,8 @@ func cqlTypesToRustType(sqlType string) (typ, org, def string) {
 		def = `0f32`
 
 	default:
-		typ = "UNKNOWN_sqlToRust__" + typ
-		org = "UNKNOWN_sqlToRust__" + typ
+		typ = "UNKNOWN_sqlToRust__" + sqlType
+		org = "UNKNOWN_sqlToRust__" + sqlType
 		def = `""`
 	}
 	//duration,timeuuid, uuid, map, tuple, set, list
@@ -349,7 +349,7 @@ func sqlCockRoachToTypeToGoType(sqlType string) string {
 		typ = "float64"
 
 	default:
-		typ = "UNKNOWN_sqlToGo__" + typ
+		typ = "UNKNOWN_sqlToGo__" + sqlType
 	}
 
 	return typ
@@ -378,7 +378,7 @@ func goToCockRoachType(sqlType string) string {
 		typ = "float"
 
 	default:
-		typ = "UNKNOWN_sqlToGo__" + typ
+		typ = "UNKNOWN_sqlToGo__" + sqlType
 	}
 
 	return typ
