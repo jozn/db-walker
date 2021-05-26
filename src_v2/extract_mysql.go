@@ -9,8 +9,8 @@ import (
 )
 
 var XOLogDebug = func(s string, o ...interface{}) {
-	if true {
-		fmt.Println(s, o)
+	if false {
+		fmt.Println("=SQL=> ", s, o)
 	}
 }
 

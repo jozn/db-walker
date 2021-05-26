@@ -19,7 +19,8 @@ func Run() {
 	for _, db := range DATABASES {
 		tables, err := mysql_loadTables(DB, db, "BASE TABLE")
 		NoErr(err)
-		OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
+		_ = tables
+		//OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
 	}
 
 	/*for _, table := range OutPutBuffer.Tables {
@@ -36,8 +37,8 @@ func Run() {
 		if table.NeedTrigger {
 			//OutPutBuffer.TablesTriggers = append(OutPutBuffer.TablesTriggers, table)
 		}
-		if table.PrimaryKey != nil {
-			table.XPrimaryKeyGoType = table.PrimaryKey.GoTypeOut
+		if table.SinglePrimaryKey != nil {
+			table.XPrimaryKeyGoType = table.SinglePrimaryKey.GoTypeOut
 		}
 	}
 

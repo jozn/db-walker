@@ -19,10 +19,9 @@ type NativeTable struct {
 	Columns               []*NativeColumn
 	HasPrimaryKey         bool
 	IsCompositePrimaryKey bool
-	PrimaryKey            *NativeColumn
+	SinglePrimaryKey      *NativeColumn
 	PrimaryKeys           []*NativeColumn //used for composite keys -- Note: not used in gen as
 	DataBase              string
-	Ordinal                   int
 	Comment               string
 	IsAutoIncrement       bool
 	Indexes               []*NativeIndex
@@ -30,14 +29,14 @@ type NativeTable struct {
 
 type NativeColumn struct {
 	ColumnName      string
-	SqlType         string // bigint(20) > NOT USED
-	SqlTypeStrip    string // bigint
-	Ordinal             int    // From 1
+	SqlType         string // bigint varchar
+	SqlTypeFull     string // bigint(20) or varchar(75) > NOT USED
+	Ordinal         int    // From 1
 	Comment         string
 	IsNullAble      bool
-	IsPrimary       bool
-	IsUnique        bool
-	IsAutoIncrement bool
+	IsPrimary       bool // Multi columns could be primary
+	IsUnique        bool // This shows if the columns has an unique index (applicable just to single column) -- NOT primary column in here
+	IsAutoIncrement bool // A none primary column could be auto increment
 }
 
 type NativeIndex struct {
@@ -211,7 +210,7 @@ func (t *Table) GetRustUpdateFrag() string {
 		if !c.IsPrimary {
 			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
 		}
-		/*if c.ColumnName != t.PrimaryKey.ColumnName {
+		/*if c.ColumnName != t.SinglePrimaryKey.ColumnName {
 			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
 		}*/
 	}

@@ -25,3 +25,8 @@ func ToJsonPerety(structoo interface{}) string {
 	bts, _ := prettyjson.Marshal(structoo)
 	return string(bts)
 }
+
+func PPJson(structObj interface{})  {
+	fmt.Println(ToJsonPerety(structObj))
+	fmt.Println("================================")
+}

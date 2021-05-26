@@ -174,7 +174,7 @@ func (t *Table) GetRustUpdateFrag() string {
 		if !c.IsPrimary {
 			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
 		}
-		/*if c.ColumnName != t.PrimaryKey.ColumnName {
+		/*if c.ColumnName != t.SinglePrimaryKey.ColumnName {
 			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
 		}*/
 	}

@@ -119,7 +119,7 @@ func Cockroach_LoadTableColumns(db *sqlx.DB, schema string, tableName string, ta
 
 		/*if strings.ToUpper(r.COLUMN_KEY) == "PRI" {
 			table.HasPrimaryKey = true
-			table.PrimaryKey = t
+			table.SinglePrimaryKey = t
 		}*/
 		//fmt.Println("Mysql loader - load tables: ))))))) ", t)
 		res = append(res, t)
