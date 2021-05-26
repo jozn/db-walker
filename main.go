@@ -1,9 +1,9 @@
 package main
 
 import (
-	"./src"
+	"./src_v2"
 )
 
 func main() {
-	src.Run()
+	src_v2.Run()
 }
