@@ -8,6 +8,12 @@ import (
 	"text/template"
 )
 
+func NewTemplateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"toUpper": strings.ToUpper,
+	}
+}
+
 func rustBuild(gen *GenOut) {
 
 	rustGenModels(gen)
@@ -36,7 +42,7 @@ func rustBuildFromTemplate(tplName string, gen *GenOut) string {
 
 func rustGenModels(gen *GenOut) {
 	tpl := _rustGetTemplate("models.rs")
-	tables := []*Table{}
+	tables := []*OutTable{}
 	for _, t := range gen.Tables {
 		//if !skipTableModel(t.TableNameSql) {
 		tables = append(tables, t)
@@ -61,7 +67,7 @@ func _rustGetTemplate(tplName string) *template.Template {
 
 ///////////////////////// Migration From cassandra-walker ///////////////
 
-func (table *Table) GetRustWheresTmplOut() string {
+func (table *OutTable) GetRustWheresTmplOut() string {
 	const TPL = `
     pub fn {{ .Mod.FuncName }} (&mut self, val: {{ .Col.TypeRustBorrow }} ) -> &mut Self {
         let w = WhereClause{
@@ -87,9 +93,9 @@ func (table *Table) GetRustWheresTmplOut() string {
 			wmr := col.WhereModifiersRust[j]
 
 			parm := struct {
-				Table *Table
+				Table *OutTable
 				Mod   WhereModifier
-				Col   *Column
+				Col   *OutColumn
 			}{
 				table, wmr, col,
 			}
@@ -107,7 +113,7 @@ func (table *Table) GetRustWheresTmplOut() string {
 }
 
 // todo (maybe): b/c of diffrence in api of cassandar and mysql libs for now we not support Ins > use or_{col} for now
-func (table *Table) GetRustWhereInsTmplOut() string {
+func (table *OutTable) GetRustWhereInsTmplOut() string {
 	const TPL = `
     pub fn {{ .Mod.FuncName }} (&mut self, val: Vec<{{ .Col.TypeRustBorrow }}> ) -> &mut Self {
 		let len = val.len();
@@ -139,9 +145,9 @@ func (table *Table) GetRustWhereInsTmplOut() string {
 			wmr := col.WhereInsModifiersRust[j]
 
 			parm := struct {
-				Table *Table
+				Table *OutTable
 				Mod   WhereModifierIns
-				Col   *Column
+				Col   *OutColumn
 			}{
 				table, wmr, col,
 			}
@@ -159,7 +165,7 @@ func (table *Table) GetRustWhereInsTmplOut() string {
 }
 
 // Selectors
-func (table *Table) GetRustSelectorOrders() string {
+func (table *OutTable) GetRustSelectorOrders() string {
 	const TPL = `
     pub fn order_by_{{ .Col.ColumnNameRust }}_asc(&mut self) -> &mut Self {
 		self.order_by.push("{{ .Col.ColumnName }} ASC");
@@ -177,8 +183,8 @@ func (table *Table) GetRustSelectorOrders() string {
 		col := table.Columns[i]
 		if col.IsNumber() || col.IsString() { //&& col.IsNumber()
 			parm := struct {
-				Table *Table
-				Col   *Column
+				Table *OutTable
+				Col   *OutColumn
 			}{
 				table, col,
 			}

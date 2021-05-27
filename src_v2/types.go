@@ -6,15 +6,11 @@ import (
 )
 
 type GenOut struct {
-	Tables []*Table
-	//RustTables           []*Table
-	//TablesTriggers       []*Table
-	//GeneratedPb          string
-	//GeneratedPbConverter string
+	Tables []*OutTable
 }
 
 // Mysql Native Types
-// Note due to how our policy change from Go ro Rust, there could be some wired behaviour around primary keys
+
 type NativeTable struct {
 	TableName             string
 	Columns               []*NativeColumn
@@ -51,6 +47,7 @@ type NativeIndex struct {
 }
 
 // Output Types
+
 type OutTable struct {
 	TableName           string
 	HasPrimaryKey       bool
@@ -64,7 +61,8 @@ type OutTable struct {
 	PrimaryKeys         []*OutColumn //used for composite keys -- Note: not used in gen as
 	Indexes             []*OutIndex
 	// Views
-	SchemeTable string // with database "`ms`.`post`"
+	SchemeTable    string // with database "`ms`.`post`"
+	TableNameCamel string
 }
 
 type OutColumn struct {
@@ -77,6 +75,9 @@ type OutColumn struct {
 	// Views
 	RustType       string
 	RustTypeBorrow string
+
+	WhereModifiersRust    []WhereModifier
+	WhereInsModifiersRust []WhereModifierIns
 }
 
 // Only None Single Primary
@@ -88,98 +89,11 @@ type OutIndex struct {
 	Columns   []*OutColumn
 }
 
-///////// Old and Views /////////
-
-// Note due to how our policy change from Go ro Rust, there could be some wired behaviour around primary keys
-type Table struct {
-	TableName             string
-	Columns               []*Column
-	HasPrimaryKey         bool
-	IsCompositePrimaryKey bool
-	PrimaryKey            *Column
-	PrimaryKeys           []*Column //used for composite keys -- Note: not used in gen as
-	DataBase              string    //or schema in PG or tablesapce in cassandra
-	Seq                   int
-	Comment               string
-	IsAutoIncrement       bool
-	Indexes               []*Index
-	TableSchemeOut        string //with table "`ms`.`post`"
-	TableNameSql          string //"post"
-	TableNameGo           string
-	TableNameJava         string
-	TableNamePB           string
-	ShortName             string
-	NeedTrigger           bool   // MySql trigger events
-	XPrimaryKeyGoType     string //shortcut
-	IsMysql               bool
-	IsPG                  bool   // Is PostgreSQL/CockroachDB
-	Dollar                string // Use ? For MySql
-	// Rust
-	TableNameRust string
-}
-
-func (t *Table) ColNum() int {
+func (t *OutTable) ColNum() int {
 	return len(t.Columns)
 }
 
-type Column struct {
-	ColumnName      string
-	ColumnNameCamel string
-	ColumnNameSnake string //not used
-	SqlType         string // bigint(20) > NOT USED
-	SqlTypeStrip    string // bigint
-	Seq             int    // From 1
-	Comment         string
-	ColumnNameOut   string //dep: unclear what is the meaning
-	GoTypeOut       string
-	RoachTypeOut    string
-	GoDefaultOut    string
-	JavaTypeOut     string
-	PBTypeOut       string
-	StructTagOut    string // For Go Json tag
-	IsNullAble      bool
-	IsPrimary       bool
-	IsUnique        bool
-	IsAutoIncrement bool
-	//Rust
-	ColumnNameRust        string
-	RustTypeOut           string
-	TypeRustBorrow        string             //todo
-	WhereModifiersRust    []WhereModifier    //todo
-	WhereInsModifiersRust []WhereModifierIns //todo
-
-}
-
-type Index struct {
-	FuncNameOut string // index_name
-	IndexName   string // index_name
-	IsUnique    bool   // is_unique
-	IsPrimary   bool   // is_primary
-	SeqNo       int    // seq_no
-	Columns     []*Column
-	Table       *Table
-	// Rust
-	RustFuncName string // index_name
-}
-
-type WhereModifier struct {
-	Suffix    string
-	Prefix    string
-	Condition string
-	AndOr     string
-	FuncName  string
-}
-
-type WhereModifierIns struct {
-	Suffix   string
-	Prefix   string
-	AndOr    string
-	FuncName string
-}
-
-//////////////////////////////////////
-
-func (t *Table) GetColumnByName(col string) *Column {
+func (t *NativeTable) GetColumnByName(col string) *NativeColumn {
 	for _, c := range t.Columns {
 		if c.ColumnName == col {
 			return c
@@ -188,45 +102,34 @@ func (t *Table) GetColumnByName(col string) *Column {
 	return nil
 }
 
-func (t *Column) ToCockroachColumns() string {
-	s := t.ColumnNameSnake + " " + t.RoachTypeOut + " "
-	if t.IsPrimary {
-		s += "PRIMARY KEY "
+func (t *OutTable) GetColumnByName(col string) *OutColumn {
+	for _, c := range t.Columns {
+		if c.ColumnName == col {
+			return c
+		}
 	}
-	if t.IsUnique {
-		s += "UNIQUE "
-	}
-	if !t.IsNullAble {
-		s += "NOT NULL "
-	}
-
-	return s
+	return nil
 }
 
-// For Rust
-func (t *Column) GetColIndex() int {
-	return t.Seq - 1
-}
-
-func (t *Column) IsNumber() bool {
+func (t *OutColumn) IsNumber() bool {
 	res := false
-	switch t.RustTypeOut {
+	switch t.RustType {
 	case "u64", "i64", "u32", "i32", "f32", "f64":
 		res = true
 	}
 	return res
 }
 
-func (t *Column) IsString() bool {
+func (t *OutColumn) IsString() bool {
 	res := false
-	switch t.GoTypeOut {
-	case "string":
+	switch t.RustType {
+	case "String":
 		res = true
 	}
 	return res
 }
 
-func (t *Table) GetRustParam() string {
+func (t *OutTable) GetRustParam() string {
 	arr := []string{}
 	for _, c := range t.Columns {
 		arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
@@ -234,20 +137,20 @@ func (t *Table) GetRustParam() string {
 	return strings.Join(arr, ", ")
 }
 
-func (t *Table) GetRustParamNoPrimaryKey() string {
+func (t *OutTable) GetRustParamNoPrimaryKey() string {
 	arr := []string{}
 	for _, c := range t.Columns {
-		if c.ColumnName != t.PrimaryKey.ColumnName {
+		if c.ColumnName != t.SinglePrimaryKey.ColumnName {
 			arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
 		}
 	}
 	return strings.Join(arr, ", ")
 }
 
-func (t *Table) GetRustUpdateFrag() string {
+func (t *OutTable) GetRustUpdateFrag() string {
 	arr := []string{}
 	for _, c := range t.Columns {
-		if !c.IsPrimary {
+		if !c.IsSinglePrimary { //todo
 			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
 		}
 		/*if c.ColumnName != t.SinglePrimaryKey.ColumnName {
@@ -257,7 +160,7 @@ func (t *Table) GetRustUpdateFrag() string {
 	return strings.Join(arr, ", ")
 }
 
-func (t *Table) GetRustUpdateKeysWhereFrag() string {
+func (t *OutTable) GetRustUpdateKeysWhereFrag() string {
 	arr := []string{}
 	for _, c := range t.PrimaryKeys {
 		arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
@@ -265,14 +168,12 @@ func (t *Table) GetRustUpdateKeysWhereFrag() string {
 	return strings.Join(arr, " AND ")
 }
 
-////////////// Modifer for Rust /////////////
-
-func (c *Column) GetModifiersRust() (res []WhereModifier) {
+func (c *OutColumn) GetModifiersRust() (res []WhereModifier) {
 	add := func(m WhereModifier) {
 		if len(m.AndOr) > 0 {
-			m.FuncName = m.Prefix + "_" + c.ColumnNameRust + m.Suffix
+			m.FuncName = m.Prefix + "_" + c.ColumnName + m.Suffix
 		} else {
-			m.FuncName = c.ColumnNameRust + m.Suffix
+			m.FuncName = c.ColumnName + m.Suffix
 		}
 		res = append(res, m)
 	}
@@ -293,12 +194,12 @@ func (c *Column) GetModifiersRust() (res []WhereModifier) {
 	return
 }
 
-func (c *Column) GetRustModifiersIns() (res []WhereModifierIns) {
+func (c *OutColumn) GetRustModifiersIns() (res []WhereModifierIns) {
 	add := func(m WhereModifierIns) {
 		if len(m.AndOr) > 0 {
-			m.FuncName = m.Prefix + "_" + c.ColumnNameRust + m.Suffix
+			m.FuncName = m.Prefix + "_" + c.ColumnName + m.Suffix
 		} else {
-			m.FuncName = c.ColumnNameRust + m.Suffix
+			m.FuncName = c.ColumnName + m.Suffix
 		}
 		res = append(res, m)
 	}
@@ -310,4 +211,19 @@ func (c *Column) GetRustModifiersIns() (res []WhereModifierIns) {
 	}
 
 	return
+}
+
+type WhereModifier struct {
+	Suffix    string
+	Prefix    string
+	Condition string
+	AndOr     string
+	FuncName  string
+}
+
+type WhereModifierIns struct {
+	Suffix   string
+	Prefix   string
+	AndOr    string
+	FuncName string
 }

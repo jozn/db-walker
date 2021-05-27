@@ -18,9 +18,6 @@ func PertyPrint(a interface{}) {
 	fmt.Printf("%# v \n", pretty.Formatter(a))
 }
 
-func PertyPrint2(a interface{}) {
-	fmt.Printf("%# v \n", ToJsonPerety(a))
-}
 func ToJsonPerety(structoo interface{}) string {
 	bts, _ := prettyjson.Marshal(structoo)
 	return string(bts)

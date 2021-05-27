@@ -2,12 +2,12 @@ package src_v2
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
 // Notes:
 //	+ MySQL does not set unique to true for primary keys even though they are.
-
 
 func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*NativeTable, err error) {
 	// sql query
@@ -232,4 +232,10 @@ func mysql_loadIndexs(db *sqlx.DB, schema string, tableName string, table *Nativ
 	//PPJson(mp)
 
 	return res, nil
+}
+
+var XOLogDebug = func(s string, o ...interface{}) {
+	if true {
+		fmt.Println(s, o)
+	}
 }

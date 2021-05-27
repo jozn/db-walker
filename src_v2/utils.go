@@ -1,16 +1,10 @@
 package src_v2
 
 import (
-	"regexp"
 	"strings"
 	"unicode"
-
-	"github.com/knq/snaker"
 )
 
-//copy of "ms/xox/snaker"
-
-// SnakeToCamel converts s to CamelCase.
 func SnakeToCamel(s string) string {
 	var r string
 
@@ -29,12 +23,6 @@ func SnakeToCamel(s string) string {
 		}
 
 		r += strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
-		/*u := strings.ToUpper(w)
-		if ok := commonInitialisms[u]; ok {//me not need we use: Id and Html
-			r += u
-		} else {
-			r += strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
-		}*/
 	}
 
 	return r
@@ -57,53 +45,6 @@ func ToSnake(in string) string {
 	return string(out)
 }
 
-// commonInitialisms is the set of commonInitialisms.
-//
-// taken from: github.com/golang/lint @ 206c0f0
-var commonInitialisms = map[string]bool{
-	"ACL":   true,
-	"API":   true,
-	"ASCII": true,
-	"CPU":   true,
-	"CSS":   true,
-	"DNS":   true,
-	"EOF":   true,
-	"GUID":  true,
-	"HTML":  true,
-	"HTTP":  true,
-	"HTTPS": true,
-	"ID":    true,
-	"IP":    true,
-	"JSON":  true,
-	"LHS":   true,
-	"QPS":   true,
-	"RAM":   true,
-	"RHS":   true,
-	"RPC":   true,
-	"SLA":   true,
-	"SMTP":  true,
-	"SQL":   true,
-	"SSH":   true,
-	"TCP":   true,
-	"TLS":   true,
-	"TTL":   true,
-	"UDP":   true,
-	"UI":    true,
-	"UID":   true,
-	"UUID":  true,
-	"URI":   true,
-	"URL":   true,
-	"UTF8":  true,
-	"VM":    true,
-	"XML":   true,
-	"XMPP":  true,
-	"XSRF":  true,
-	"XSS":   true,
-}
-
-var strip = regexp.MustCompile(`\(.*\)`)
-
-// This is newer version
 func sqlTypesToRustType(sqlType string) (typ, org, def string) {
 	switch strings.ToLower(sqlType) {
 	case "string", "varchar", "char", "text", "tinytext":
@@ -146,18 +87,4 @@ func sqlTypesToRustType(sqlType string) (typ, org, def string) {
 	}
 	//duration,timeuuid, uuid, map, tuple, set, list
 	return
-}
-
-var PrecScaleRE = regexp.MustCompile(`\(([0-9]+)(\s*,[0-9]+)?\)$`)
-
-// SinguralizeIdentifier will singularize a identifier, returning it in
-// CamelCase.
-func SingularizeIdentifier(s string) string {
-	/*if i := reverseIndexRune(s, '_'); i != -1 {
-		s = s[:i] + "_" + inflector.Singularize(s[i+1:])
-	} else {
-		s = inflector.Singularize(s)
-	}*/
-
-	return snaker.SnakeToCamelIdentifier(s)
 }

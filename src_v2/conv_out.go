@@ -9,15 +9,20 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 		typRs, typOrgRs, _ := sqlTypesToRustType(nCol.SqlType)
 
 		oCol := &OutColumn{
-			ColumnName:      nCol.ColumnName,
-			IsNullAble:      nCol.IsNullAble,
-			IsSinglePrimary: false, // below
-			IsInPrimary:     false, // below
-			IsUnique:        nCol.IsUnique,
-			IsAutoIncr:      nCol.IsAutoIncrement,
-			RustType:        typRs,
-			RustTypeBorrow:  typOrgRs,
+			ColumnName:            nCol.ColumnName,
+			IsNullAble:            nCol.IsNullAble,
+			IsSinglePrimary:       false, // below
+			IsInPrimary:           false, // below
+			IsUnique:              nCol.IsUnique,
+			IsAutoIncr:            nCol.IsAutoIncrement,
+			RustType:              typRs,
+			RustTypeBorrow:        typOrgRs,
+			WhereModifiersRust:    nil, // below
+			WhereInsModifiersRust: nil, // below
 		}
+
+		oCol.WhereModifiersRust = oCol.GetModifiersRust()
+		oCol.WhereInsModifiersRust = oCol.GetRustModifiersIns()
 
 		if nativeTable.SinglePrimaryKey != nil && nativeTable.SinglePrimaryKey.ColumnName == nCol.ColumnName {
 			oCol.IsSinglePrimary = true
@@ -44,7 +49,7 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 		oIndx := &OutIndex{
 			IndexName: nativeIndex.IndexName,
 			IsUnique:  nativeIndex.IsUnique || nativeIndex.IndexName == "PRIMARY", // Primary keys are always unique
-			IsPrimary: nativeIndex.IsPrimary, // multi ones
+			IsPrimary: nativeIndex.IsPrimary,                                      // multi ones
 			ColNum:    len(nativeIndex.Columns),
 			Columns:   nil, // below
 		}
@@ -61,6 +66,7 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 	}
 
 	outT := &OutTable{
+		TableNameCamel:      SnakeToCamel(nativeTable.TableName),
 		TableName:           nativeTable.TableName,
 		HasPrimaryKey:       nativeTable.HasPrimaryKey,
 		HasMultiPrimaryKeys: len(nativeTable.PrimaryKeys) > 1,
