@@ -14,7 +14,6 @@ func rustBuild(gen *GenOut) {
 
 }
 
-
 func rustWriteOutput(fileName, output string) {
 	os.MkdirAll(OUTPUT_DIR_RUST, 0777)
 	ioutil.WriteFile(OUTPUT_DIR_RUST+fileName, []byte(output), os.ModeType)
@@ -40,7 +39,7 @@ func rustGenModels(gen *GenOut) {
 	tables := []*Table{}
 	for _, t := range gen.Tables {
 		//if !skipTableModel(t.TableNameSql) {
-			tables = append(tables, t)
+		tables = append(tables, t)
 		//}
 	}
 

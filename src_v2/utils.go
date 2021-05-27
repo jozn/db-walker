@@ -148,9 +148,7 @@ func sqlTypesToRustType(sqlType string) (typ, org, def string) {
 	return
 }
 
-
 var PrecScaleRE = regexp.MustCompile(`\(([0-9]+)(\s*,[0-9]+)?\)$`)
-
 
 // SinguralizeIdentifier will singularize a identifier, returning it in
 // CamelCase.

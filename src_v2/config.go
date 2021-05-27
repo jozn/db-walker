@@ -12,5 +12,3 @@ var triggerNeededArr = []string{}
 var OutPutBuffer = &GenOut{}
 
 var EscapeColumnNames = false
-
-

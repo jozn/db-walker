@@ -26,7 +26,7 @@ func ToJsonPerety(structoo interface{}) string {
 	return string(bts)
 }
 
-func PPJson(structObj interface{})  {
+func PPJson(structObj interface{}) {
 	fmt.Println(ToJsonPerety(structObj))
 	fmt.Println("================================")
 }

@@ -5,7 +5,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// MyTables runs a custom query, returning results as Table.
+// Notes:
+//	+ MySQL does not set unique to true for primary keys even though they are.
+
+
 func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*NativeTable, err error) {
 	// sql query
 	const sqlstr = `SELECT * ` +
@@ -16,9 +19,9 @@ func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*Native
 	XOLogDebug(sqlstr, schema, relkind)
 
 	var tabels = []struct {
-		TABLE_NAME     string
-		TABLE_TYPE string
-		ENGINE string
+		TABLE_NAME    string
+		TABLE_TYPE    string
+		ENGINE        string
 		TABLE_COMMENT string
 		// Note: This filed just is the counter for auto_increment, in newly created tables this is null even if
 		//	the table has auto_increment column, use EXTRA column in inforamation_schema
@@ -32,7 +35,7 @@ func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*Native
 
 	for _, table := range tabels {
 		// Load Columns
-		cols, err := mysql_loadTableColumns(db,schema,table.TABLE_NAME)
+		cols, err := mysql_loadTableColumns(db, schema, table.TABLE_NAME)
 		NoErr(err)
 
 		nt := &NativeTable{
@@ -49,12 +52,12 @@ func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*Native
 		}
 
 		// Set table data info about columns info
-		primaryCols :=  []*NativeColumn{}
+		primaryCols := []*NativeColumn{}
 		for _, col := range cols {
 			if col.IsPrimary {
 				nt.HasPrimaryKey = true
 
-				primaryCols =  append(primaryCols, col)
+				primaryCols = append(primaryCols, col)
 			}
 
 			if col.IsAutoIncrement {
@@ -72,7 +75,7 @@ func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*Native
 		// Load Indexes
 
 		//indxs, err := mysql_TableIndexes_old(db,schema,table.TABLE_NAME, &Table{})
-		indxs, err := mysql_loadIndexs(db,schema,table.TABLE_NAME,nt)
+		indxs, err := mysql_loadIndexs(db, schema, table.TABLE_NAME, nt)
 		nt.Indexes = indxs
 		NoErr(err)
 		//fmt.Println("&&&&&&&&&&&&&&&&&&&&& indes")
@@ -82,7 +85,7 @@ func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*Native
 	}
 
 	//PertyPrint(res[0])
-	PPJson(res)
+	//PPJson(res)
 
 	return res, nil
 }
@@ -94,14 +97,14 @@ func mysql_loadTableColumns(db *sqlx.DB, schema string, tableName string) (res [
 	//	+ "PRI" in COLUMN_KEY: multi columns could have this in case of compund index
 
 	var colRows = []struct {
-		ORDINAL_POSITION int // Starts form 0
-		COLUMN_NAME      string	// ex: "channel_msg"
-		DATA_TYPE        string // simple: "varchar" "bigint" "text" "intt" >> no size limit and unsigned description in here
-		IS_NULLABLE      string // 'YES' 'NO'
+		ORDINAL_POSITION int            // Starts form 0
+		COLUMN_NAME      string         // ex: "channel_msg"
+		DATA_TYPE        string         // simple: "varchar" "bigint" "text" "intt" >> no size limit and unsigned description in here
+		IS_NULLABLE      string         // 'YES' 'NO'
 		COLUMN_DEFAULT   sql.NullString // null or string like '0'
-		COLUMN_TYPE      string // "varchar(50)" "bigint unsigned" " text" "blob" >> with size limit and unsigned description
-		COLUMN_KEY       string // if == 'PRI' then is the primiry key -- not neccoery auto_incer -- "PRI", "UNI", "MUL", ""
-		EXTRA            string // if == 'auto_increment' then this is the auto incerment -- not neccoery primiry key
+		COLUMN_TYPE      string         // "varchar(50)" "bigint unsigned" " text" "blob" >> with size limit and unsigned description
+		COLUMN_KEY       string         // if == 'PRI' then is the primiry key -- not neccoery auto_incer -- "PRI", "UNI", "MUL", ""
+		EXTRA            string         // if == 'auto_increment' then this is the auto incerment -- not neccoery primiry key
 		COLUMN_COMMENT   string
 	}{}
 	// sql query
@@ -134,12 +137,12 @@ func mysql_loadTableColumns(db *sqlx.DB, schema string, tableName string) (res [
 		}
 
 		col := &NativeColumn{
-			ColumnName:      colRow.COLUMN_NAME,
-			SqlType:         colRow.DATA_TYPE,
-			SqlTypeFull:     colRow.COLUMN_TYPE,
-			Ordinal:         colRow.ORDINAL_POSITION,
-			Comment:         colRow.COLUMN_COMMENT,
-			IsNullAble:      nullable,
+			ColumnName:  colRow.COLUMN_NAME,
+			SqlType:     colRow.DATA_TYPE,
+			SqlTypeFull: colRow.COLUMN_TYPE,
+			Ordinal:     colRow.ORDINAL_POSITION,
+			Comment:     colRow.COLUMN_COMMENT,
+			IsNullAble:  nullable,
 			// Set below
 			IsPrimary:       false,
 			IsUnique:        false,
@@ -164,6 +167,7 @@ func mysql_loadTableColumns(db *sqlx.DB, schema string, tableName string) (res [
 	return res, nil
 }
 
+// This func does not change the (table *NativeTable) fields.
 func mysql_loadIndexs(db *sqlx.DB, schema string, tableName string, table *NativeTable) (res []*NativeIndex, err error) {
 	// Notes:
 	// + PRIMARY key is just a UNIQUE NOT NULL constraint (https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html)
@@ -172,11 +176,11 @@ func mysql_loadIndexs(db *sqlx.DB, schema string, tableName string, table *Nativ
 	type tableRow struct {
 		NON_UNIQUE int // 0 or 1 -- 1 is being set just for none-primary NOT unique types (multi rows)
 		//INDEX_SCHEMA string // Name of table
-		INDEX_NAME string // 'PRIMARY' or other name of index
-		SEQ_IN_INDEX int // Strarts from 1
-		COLUMN_NAME string
-		NULLABLE string // "YES" or ""
-		INDEX_TYPE string // "BTREE" "HASH"
+		INDEX_NAME    string // 'PRIMARY' or other name of index
+		SEQ_IN_INDEX  int    // Strarts from 1
+		COLUMN_NAME   string
+		NULLABLE      string // "YES" or ""
+		INDEX_TYPE    string // "BTREE" "HASH"
 		INDEX_COMMENT string
 	}
 
@@ -192,16 +196,16 @@ func mysql_loadIndexs(db *sqlx.DB, schema string, tableName string, table *Nativ
 	err = db.Unsafe().Select(&colRows, sqlstr, schema, tableName)
 	NoErr(err)
 	//PPJson(colRows)
-	 mp := make(map[string][]*tableRow)
+	mp := make(map[string][]*tableRow)
 	for _, colRow := range colRows {
 		mp[colRow.INDEX_NAME] = append(mp[colRow.INDEX_NAME], colRow)
 	}
 
-	for idxName ,idxCols := range mp {
+	for idxName, idxCols := range mp {
 		idx1 := idxCols[0]
 
 		isUnique := true
-		if idx1.NON_UNIQUE == 1{
+		if idx1.NON_UNIQUE == 1 {
 			isUnique = false
 		}
 

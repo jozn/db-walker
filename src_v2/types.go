@@ -6,13 +6,14 @@ import (
 )
 
 type GenOut struct {
-	Tables               []*Table
+	Tables []*Table
 	//RustTables           []*Table
 	//TablesTriggers       []*Table
 	//GeneratedPb          string
 	//GeneratedPbConverter string
 }
 
+// Mysql Native Types
 // Note due to how our policy change from Go ro Rust, there could be some wired behaviour around primary keys
 type NativeTable struct {
 	TableName             string
@@ -47,6 +48,44 @@ type NativeIndex struct {
 	Comment   string
 	Columns   []*NativeColumn
 	Table     *NativeTable
+}
+
+// Output Types
+type OutTable struct {
+	TableName           string
+	HasPrimaryKey       bool
+	HasMultiPrimaryKeys bool
+	IsAutoIncr          bool
+	IsAutoIncrPrimary   bool
+	DataBase            string
+	Comment             string
+	Columns             []*OutColumn
+	SinglePrimaryKey    *OutColumn
+	PrimaryKeys         []*OutColumn //used for composite keys -- Note: not used in gen as
+	Indexes             []*OutIndex
+	// Views
+	SchemeTable string // with database "`ms`.`post`"
+}
+
+type OutColumn struct {
+	ColumnName      string
+	IsNullAble      bool
+	IsSinglePrimary bool
+	IsInPrimary     bool // if multi primary and this col is included
+	IsUnique        bool // if unique index or sinlge primary
+	IsAutoIncr      bool
+	// Views
+	RustType       string
+	RustTypeBorrow string
+}
+
+// Only None Single Primary
+type OutIndex struct {
+	IndexName string // index_name
+	IsUnique  bool   // is_unique
+	IsPrimary bool   // Just multi columns primary
+	ColNum    int    // is_primary
+	Columns   []*OutColumn
 }
 
 ///////// Old and Views /////////
@@ -225,6 +264,7 @@ func (t *Table) GetRustUpdateKeysWhereFrag() string {
 	}
 	return strings.Join(arr, " AND ")
 }
+
 ////////////// Modifer for Rust /////////////
 
 func (c *Column) GetModifiersRust() (res []WhereModifier) {

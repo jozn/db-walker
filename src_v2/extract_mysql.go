@@ -25,7 +25,7 @@ func MySQL_LoadTables(db *sqlx.DB, schema string, relkind string) (res []*Table,
 	XOLogDebug(sqlstr, schema, relkind)
 
 	var res2 = []struct {
-		TABLE_NAME     string //`json:"rec_created_by"  db:"TABLE_NAME"`
+		TABLE_NAME string //`json:"rec_created_by"  db:"TABLE_NAME"`
 		// Note: This filed just is the counter for auto_increment, in newly created tables this is null even if
 		//	the table has auto_increment column, use EXTRA column in inforamation_schema
 		AUTO_INCREMENT sql.NullInt64
