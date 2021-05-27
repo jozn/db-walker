@@ -40,12 +40,13 @@ type NativeColumn struct {
 }
 
 type NativeIndex struct {
-	IndexName   string // index_name
-	IsUnique    bool   // is_unique
-	IsPrimary   bool   // is_primary
-	Ordinal       int    // seq_no
-	Columns     []*NativeColumn
-	Table       *NativeTable
+	IndexName string // index_name
+	IsUnique  bool   // is_unique
+	IsPrimary bool   // is_primary
+	ColNum    int    // is_primary
+	Comment   string
+	Columns   []*NativeColumn
+	Table     *NativeTable
 }
 
 ///////// Old and Views /////////

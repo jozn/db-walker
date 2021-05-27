@@ -3,7 +3,6 @@ package src_v2
 import (
 	"database/sql"
 	"github.com/jmoiron/sqlx"
-	"strings"
 )
 
 // MyTables runs a custom query, returning results as Table.
@@ -72,15 +71,18 @@ func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*Native
 
 		// Load Indexes
 
-		indxs, err := mysql_TableIndexes(db,schema,table.TABLE_NAME, &Table{})
+		//indxs, err := mysql_TableIndexes_old(db,schema,table.TABLE_NAME, &Table{})
+		indxs, err := mysql_loadIndexs(db,schema,table.TABLE_NAME,nt)
+		nt.Indexes = indxs
 		NoErr(err)
-		PPJson(indxs)
+		//fmt.Println("&&&&&&&&&&&&&&&&&&&&& indes")
+		//PPJson(indxs)
 
 		res = append(res, nt)
 	}
 
 	//PertyPrint(res[0])
-	//PPJson(res)
+	PPJson(res)
 
 	return res, nil
 }
@@ -162,63 +164,68 @@ func mysql_loadTableColumns(db *sqlx.DB, schema string, tableName string) (res [
 	return res, nil
 }
 
-func mysql_TableIndexes(db *sqlx.DB, schema string, tableName string, table *Table) (res []*Index, err error) {
+func mysql_loadIndexs(db *sqlx.DB, schema string, tableName string, table *NativeTable) (res []*NativeIndex, err error) {
+	// Notes:
+	// + PRIMARY key is just a UNIQUE NOT NULL constraint (https://dev.mysql.com/doc/refman/8.0/en/innodb-index-types.html)
+	// + MySQL seems to not allow change the name of PRIMARY Index
+
+	type tableRow struct {
+		NON_UNIQUE int // 0 or 1 -- 1 is being set just for none-primary NOT unique types (multi rows)
+		//INDEX_SCHEMA string // Name of table
+		INDEX_NAME string // 'PRIMARY' or other name of index
+		SEQ_IN_INDEX int // Strarts from 1
+		COLUMN_NAME string
+		NULLABLE string // "YES" or ""
+		INDEX_TYPE string // "BTREE" "HASH"
+		INDEX_COMMENT string
+	}
+
+	var colRows = []*tableRow{}
 	// sql query
-	var rows = []struct {
-		INDEX_NAME string
-		IS_UNIQUE  bool
-	}{}
-
-	const sqlstr = `SELECT ` +
-		`DISTINCT INDEX_NAME, ` +
-		`NOT non_unique AS IS_UNIQUE ` +
+	const sqlstr = `SELECT * ` +
 		`FROM information_schema.statistics ` +
-		//`WHERE index_name <> 'PRIMARY' AND index_schema = ? AND table_name = ?`
-		`WHERE index_schema = ? AND table_name = ? AND INDEX_NAME not like '%skip%' `
-
+		`WHERE table_schema = ? AND table_name = ? ` +
+		`ORDER BY seq_in_index ASC `
+	// run query
 	XOLogDebug(sqlstr, schema, tableName)
-	err = db.Select(&rows, sqlstr, schema, tableName)
-	if err != nil {
-		NoErr(err)
-		return
+
+	err = db.Unsafe().Select(&colRows, sqlstr, schema, tableName)
+	NoErr(err)
+	//PPJson(colRows)
+	 mp := make(map[string][]*tableRow)
+	for _, colRow := range colRows {
+		mp[colRow.INDEX_NAME] = append(mp[colRow.INDEX_NAME], colRow)
 	}
 
-	for _, r := range rows {
-		i := &Index{
-			IndexName: r.INDEX_NAME,
-			IsUnique:  r.IS_UNIQUE,
-			//FuncNameOut: "Get" + table.TableNameGo + "By" + r.INDEX_NAME,
-		}
-		if strings.ToUpper(r.INDEX_NAME) == "PRIMARY" {
-			i.IsPrimary = true
+	for idxName ,idxCols := range mp {
+		idx1 := idxCols[0]
+
+		isUnique := true
+		if idx1.NON_UNIQUE == 1{
+			isUnique = false
 		}
 
-		rs := []struct {
-			SEQ_IN_INDEX int
-			COLUMN_NAME  string
-		}{}
-		// sql query
-		const sqlstr = `SELECT * ` +
-			//`seq_in_index, ` + //starts from 1
-			//`column_name ` +
-			`FROM information_schema.statistics ` +
-			`WHERE index_schema = ? AND table_name = ? AND index_name = ? ` +
-			`ORDER BY seq_in_index`
-
-		XOLogDebug(sqlstr, schema, tableName, i.IndexName)
-		err = db.Unsafe().Select(&rs, sqlstr, schema, tableName, i.IndexName)
-		if err != nil {
-			NoErr(err)
-			return
+		ic := &NativeIndex{
+			IndexName: idxName,
+			IsUnique:  isUnique,
+			IsPrimary: idxName == "PRIMARY",
+			ColNum:    len(idxCols),
+			Comment:   idx1.INDEX_COMMENT,
+			Columns:   nil,
+			Table:     nil,
 		}
 
-		for _, c := range rs {
-			i.Columns = append(i.Columns, table.GetColumnByName(c.COLUMN_NAME))
+		for _, col := range idxCols {
+			for _, nt := range table.Columns {
+				if nt.ColumnName == col.COLUMN_NAME {
+					ic.Columns = append(ic.Columns, nt)
+				}
+			}
 		}
-		//i.FuncNameOut = GoIndexName(i, table)
-		//i.RustFuncName = RustIndexName(i, table)
-		res = append(res, i)
+
+		res = append(res, ic)
 	}
+	//PPJson(mp)
 
 	return res, nil
 }
