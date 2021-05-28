@@ -67,6 +67,7 @@ type OutTable struct {
 
 type OutColumn struct {
 	ColumnName      string
+	Ordinal         int // From 1
 	IsNullAble      bool
 	IsSinglePrimary bool
 	IsInPrimary     bool // if multi primary and this col is included
@@ -87,6 +88,11 @@ type OutIndex struct {
 	IsPrimary bool   // Just multi columns primary
 	ColNum    int    // is_primary
 	Columns   []*OutColumn
+}
+
+// For Rust
+func (t *OutColumn) GetColIndex() int {
+	return t.Ordinal - 1
 }
 
 func (t *OutTable) ColNum() int {
@@ -140,7 +146,7 @@ func (t *OutTable) GetRustParam() string {
 func (t *OutTable) GetRustParamNoPrimaryKey() string {
 	arr := []string{}
 	for _, c := range t.Columns {
-		if c.ColumnName != t.SinglePrimaryKey.ColumnName {
+		if t.SinglePrimaryKey != nil && c.ColumnName != t.SinglePrimaryKey.ColumnName {
 			arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
 		}
 	}

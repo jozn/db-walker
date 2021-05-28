@@ -20,18 +20,18 @@ use mysql_common::value::Value;
 {{range . }}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct {{ .TableNameJava }}  { // {{ .TableName }}
+pub struct {{ .TableNameCamel }}  { // {{ .TableName }}
 {{- range .Columns }}
-    pub {{ .ColumnName }}: {{ .RustTypeOut }},
+    pub {{ .ColumnName }}: {{ .RustType }},
 {{- end }}
 }
 
-impl FromRow for {{ .TableNameJava }} {
+impl FromRow for {{ .TableNameCamel }} {
     fn from_row_opt(row: Row) -> Result<Self, FromRowError>
     where
         Self: Sized,
     {
-        Ok({{ .TableNameJava }}  {
+        Ok({{ .TableNameCamel }}  {
         {{- range .Columns }}
             {{ .ColumnName }}: row.get({{ .GetColIndex }}).unwrap_or_default(),
         {{- end }}
@@ -39,15 +39,15 @@ impl FromRow for {{ .TableNameJava }} {
     }
 }
 
-{{- $tableScheme := .TableSchemeOut }}
+{{- $tableScheme := .SchemeTable }}
 
-impl {{ .TableNameJava }} {
+impl {{ .TableNameCamel }} {
 
-{{- if .IsAutoIncrement  }}
-    pub async fn insert(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
+{{- if .IsAutoIncr  }}
+    pub async fn insert(&self, pool: &Pool) -> Result<{{ .TableNameCamel }},MyError> {
         let mut conn = pool.get_conn().await?;
 
-        let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .PrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .PrimaryKey.ColumnName }})";
+        let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .SinglePrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .SinglePrimaryKey.ColumnName }})";
         let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }}]);
 
         let qr = conn.exec_iter(
@@ -55,11 +55,11 @@ impl {{ .TableNameJava }} {
         ).await?;
 
         let mut cp = self.clone();
-        cp.{{ .PrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .PrimaryKey.RustTypeOut }};
+        cp.{{ .SinglePrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .SinglePrimaryKey.RustType }};
         Ok(cp)
     }
 {{ else }}
-    pub async fn replace(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
+    pub async fn replace(&self, pool: &Pool) -> Result<{{ .TableNameCamel }},MyError> {
         let mut conn = pool.get_conn().await?;
 
         let query = r"REPLACE INTO {{ $tableScheme }} ({{ colnames .Columns }}) VALUES ({{ colvals_dollar . .Columns }})";
@@ -74,10 +74,10 @@ impl {{ .TableNameJava }} {
     }
 {{- end }}
 
-    pub async fn replace_dep(&self, pool: &Pool) -> Result<{{ .TableNameJava }},MyError> {
+    pub async fn replace_dep(&self, pool: &Pool) -> Result<{{ .TableNameCamel }},MyError> {
         let mut conn = pool.get_conn().await?;
-{{ if .IsAutoIncrement  }}
-        let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .PrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .PrimaryKey.ColumnName }})";
+{{ if .IsAutoIncr  }}
+        let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .SinglePrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .SinglePrimaryKey.ColumnName }})";
         let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }}]);
 
         let qr = conn.exec_iter(
@@ -85,9 +85,9 @@ impl {{ .TableNameJava }} {
         ).await?;
 
         let mut cp = self.clone();
-        cp.{{ .PrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .PrimaryKey.RustTypeOut }};
+        cp.{{ .SinglePrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .SinglePrimaryKey.RustType }};
 {{ else }}
-        let query = r"REPLACE INTO {{ $tableScheme }} ({{ colnames .PrimaryKeys}}) VALUES ({{ colvals_dollar . .PrimaryKeys}})";
+        let query = r"REPLACE INTO {{ $tableScheme }} ({ colnames .PrimaryKeys}}) VALUES ({ colvals_dollar . .PrimaryKeys}})";
         let p = Params::Positional(vec![{{ .GetRustParam }}]);
 
         conn.exec_iter(
@@ -102,7 +102,7 @@ impl {{ .TableNameJava }} {
     pub async fn update(&self, pool: &Pool) -> Result<(),MyError> {
         let mut conn = pool.get_conn().await?;
         let query = r"UPDATE {{ $tableScheme }} SET {{ .GetRustUpdateFrag }} WHERE {{ .GetRustUpdateKeysWhereFrag }} ";
-        let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }},  self.{{ .PrimaryKey.ColumnName }}.clone().into() ]);
+        let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }},  self.{{ .SinglePrimaryKey.ColumnName }}.clone().into() ]);
 
         let qr = conn.exec_iter(
             query, p
@@ -115,7 +115,7 @@ impl {{ .TableNameJava }} {
         let mut conn = pool.get_conn().await?;
 
         let query = r"DELETE FROM {{ $tableScheme }} WHERE {{ .GetRustUpdateKeysWhereFrag }} ";
-        let p = Params::Positional(vec![self.{{ .PrimaryKey.ColumnName }}.clone().into()]);
+        let p = Params::Positional(vec![self.{{ .SinglePrimaryKey.ColumnName }}.clone().into()]);
 
         conn.exec_drop(
             query, p
@@ -127,7 +127,7 @@ impl {{ .TableNameJava }} {
 
 
 #[derive(Default, Debug)]
-pub struct {{ .TableNameJava }}Selector {
+pub struct {{ .TableNameCamel }}Selector {
     wheres: Vec<WhereClause>,
     select_cols: Vec<&'static str>,
     order_by:  Vec<&'static str>,
@@ -135,9 +135,9 @@ pub struct {{ .TableNameJava }}Selector {
     offset: u32,
 }
 
-impl {{ .TableNameJava }}Selector {
+impl {{ .TableNameCamel }}Selector {
     pub fn new() -> Self {
-        {{ .TableNameJava }}Selector::default()
+        {{ .TableNameCamel }}Selector::default()
     }
 
     pub fn limit(&mut self, size: u32) -> &mut Self {
@@ -157,7 +157,7 @@ impl {{ .TableNameJava }}Selector {
 
     //each column select
     {{- range .Columns }}
-    pub fn select_{{ .ColumnNameRust }}(&mut self) -> &mut Self {
+    pub fn select_{{ .ColumnName }}(&mut self) -> &mut Self {
         self.select_cols.push("{{.ColumnName}}");
         self
     }
@@ -170,7 +170,7 @@ impl {{ .TableNameJava }}Selector {
             self.select_cols.join(", ")
         };
 
-        let mut cql_query = format!("SELECT {} FROM {{.TableSchemeOut}}", cql_select);
+        let mut cql_query = format!("SELECT {} FROM {{.SchemeTable}}", cql_select);
 
         let (cql_where, where_values) = _get_where(self.wheres.clone());
 
@@ -194,7 +194,7 @@ impl {{ .TableNameJava }}Selector {
         (cql_query, where_values)
     }
 
-    pub async fn _get_rows_with_size(&mut self, session: &Pool, size: i64) -> Result<Vec<{{ .TableNameRust }}>, MyError>   {
+    pub async fn _get_rows_with_size(&mut self, session: &Pool, size: i64) -> Result<Vec<{{ .TableNameCamel }}>, MyError>   {
         let mut conn = session.get_conn().await?;
         let(cql_query, query_values) = self._to_cql();
 
@@ -205,17 +205,17 @@ impl {{ .TableNameJava }}Selector {
         let query_result = conn
             .exec_map(
                 cql_query,p,
-                |obj: {{ .TableNameRust }}| obj
+                |obj: {{ .TableNameCamel }}| obj
             ).await?;
 
         Ok(query_result)
     }
 
-    pub async fn get_rows(&mut self, session: &Pool) -> Result<Vec<{{ .TableNameRust }}>, MyError>{
+    pub async fn get_rows(&mut self, session: &Pool) -> Result<Vec<{{ .TableNameCamel }}>, MyError>{
         self._get_rows_with_size(session,-1).await
     }
 
-    pub async fn get_row(&mut self, session: &Pool) -> Result<{{ .TableNameRust }}, MyError>{
+    pub async fn get_row(&mut self, session: &Pool) -> Result<{{ .TableNameCamel }}, MyError>{
         let rows = self._get_rows_with_size(session,1).await?;
 
         let opt = rows.get(0);

@@ -10,6 +10,7 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 
 		oCol := &OutColumn{
 			ColumnName:            nCol.ColumnName,
+			Ordinal:               nCol.Ordinal,
 			IsNullAble:            nCol.IsNullAble,
 			IsSinglePrimary:       false, // below
 			IsInPrimary:           false, // below

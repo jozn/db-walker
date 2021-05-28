@@ -8,12 +8,6 @@ import (
 	"text/template"
 )
 
-func NewTemplateFuncs() template.FuncMap {
-	return template.FuncMap{
-		"toUpper": strings.ToUpper,
-	}
-}
-
 func rustBuild(gen *GenOut) {
 
 	rustGenModels(gen)
@@ -45,6 +39,10 @@ func rustGenModels(gen *GenOut) {
 	tables := []*OutTable{}
 	for _, t := range gen.Tables {
 		// We can skip any tables that we do not want in here. For now process all of them.
+		// todo support multi primay keys
+		if t.SinglePrimaryKey == nil {
+			continue
+		}
 		tables = append(tables, t)
 	}
 
@@ -68,9 +66,9 @@ func _rustGetTemplate(tplName string) *template.Template {
 
 func (table *OutTable) GetRustWheresTmplOut() string {
 	const TPL = `
-    pub fn {{ .Mod.FuncName }} (&mut self, val: {{ .Col.TypeRustBorrow }} ) -> &mut Self {
+    pub fn {{ .Mod.FuncName }} (&mut self, val: {{ .Col.RustTypeBorrow }} ) -> &mut Self {
         let w = WhereClause{
-            condition: "{{ .Mod.AndOr }} {{ .Col.ColumnNameRust }} {{ .Mod.Condition }} ?".to_string(),
+            condition: "{{ .Mod.AndOr }} {{ .Col.ColumnName }} {{ .Mod.Condition }} ?".to_string(),
             args: val.into(),
         };
         self.wheres.push(w);
@@ -114,7 +112,7 @@ func (table *OutTable) GetRustWheresTmplOut() string {
 // todo (maybe): b/c of diffrence in api of cassandar and mysql libs for now we not support Ins > use or_{col} for now
 func (table *OutTable) GetRustWhereInsTmplOut() string {
 	const TPL = `
-    pub fn {{ .Mod.FuncName }} (&mut self, val: Vec<{{ .Col.TypeRustBorrow }}> ) -> &mut Self {
+    pub fn {{ .Mod.FuncName }} (&mut self, val: Vec<{{ .Col.RustTypeBorrow }}> ) -> &mut Self {
 		let len = val.len();
         if len == 0 {
             return self
@@ -123,7 +121,7 @@ func (table *OutTable) GetRustWhereInsTmplOut() string {
         let mut marks = "?,".repeat(len);
         marks.remove(marks.len()-1);
         let w = WhereClause{
-			condition: format!("{{ .Mod.AndOr }} {{ .Col.ColumnNameRust }} IN ({})", marks),
+			condition: format!("{{ .Mod.AndOr }} {{ .Col.ColumnName }} IN ({})", marks),
             args: val.into(),
         };
         self.wheres.push(w);
@@ -166,12 +164,12 @@ func (table *OutTable) GetRustWhereInsTmplOut() string {
 // Selectors
 func (table *OutTable) GetRustSelectorOrders() string {
 	const TPL = `
-    pub fn order_by_{{ .Col.ColumnNameRust }}_asc(&mut self) -> &mut Self {
+    pub fn order_by_{{ .Col.ColumnName }}_asc(&mut self) -> &mut Self {
 		self.order_by.push("{{ .Col.ColumnName }} ASC");
         self
     }
 
-	pub fn order_by_{{ .Col.ColumnNameRust }}_desc(&mut self) -> &mut Self {
+	pub fn order_by_{{ .Col.ColumnName }}_desc(&mut self) -> &mut Self {
 		self.order_by.push("{{ .Col.ColumnName }} DESC");
         self
     }
