@@ -44,7 +44,6 @@ func Run() {
 
 	//PPJson(OutPutBuffer)
 
-	//PertyPrint(OutPutBuffer.RustTables)
 	PertyPrint(OutPutBuffer.Tables)
 	rustBuild(OutPutBuffer)
 	//goBuild(OutPutBuffer)

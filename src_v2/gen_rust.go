@@ -44,9 +44,8 @@ func rustGenModels(gen *GenOut) {
 	tpl := _rustGetTemplate("models.rs")
 	tables := []*OutTable{}
 	for _, t := range gen.Tables {
-		//if !skipTableModel(t.TableNameSql) {
+		// We can skip any tables that we do not want in here. For now process all of them.
 		tables = append(tables, t)
-		//}
 	}
 
 	buffer := bytes.NewBufferString("")
