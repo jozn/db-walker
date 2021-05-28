@@ -16,55 +16,38 @@ func Run() {
 	DB.MapperFunc(func(s string) string { return s })
 	DB = DB.Unsafe()
 
-	//OutPutBuffer := &GenOut{}
+	OutPutBuffer := &GenOut{}
 	for _, db := range DATABASES {
 		tables, err := mysql_loadTables(DB, db, "BASE TABLE")
 		NoErr(err)
 		_ = tables
 
 		for _, table := range tables {
-			rs := convNativeTableToOut(*table)
-			PPJson(rs)
+			outTable := convNativeTableToOut(*table)
+			//PPJson(outTable)
 			fmt.Println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+			OutPutBuffer.Tables = append(OutPutBuffer.Tables, outTable)
 		}
-		//OutPutBuffer.Tables = append(OutPutBuffer.Tables, tables...)
+	}
+	PertyPrint(OutPutBuffer.Tables)
+
+	// For Rust Filtering
+	// Note: We add column modifiers in here in order to have a more shorter debug outputs in above of
+	//	this line, originally we should add them in convNativeTableToOut().
+	for _, outTable := range OutPutBuffer.Tables {
+		// Add Modifiers
+		for _, col := range outTable.Columns {
+			col.WhereModifiersRust = col.GetModifiersRust()
+			col.WhereInsModifiersRust = col.GetRustModifiersIns()
+		}
 	}
 
-	/*
+	//PPJson(OutPutBuffer)
 
-		for _, table := range OutPutBuffer.Tables {
-			if table.IsPG {
-				continue
-			}
-			if table.NeedTrigger {
-				//OutPutBuffer.TablesTriggers = append(OutPutBuffer.TablesTriggers, table)
-			}
-			if table.SinglePrimaryKey != nil {
-				table.XPrimaryKeyGoType = table.SinglePrimaryKey.GoTypeOut
-			}
-		}
+	//PertyPrint(OutPutBuffer.RustTables)
+	PertyPrint(OutPutBuffer.Tables)
+	rustBuild(OutPutBuffer)
+	//goBuild(OutPutBuffer)
+	//PertyPrint(OutPutBuffer.Tables)
 
-		// For Rust Filtering
-		for _, table := range OutPutBuffer.Tables {
-			if table.IsPG {
-				continue
-			}
-
-			// Add Modifires
-			for _, col := range table.Columns {
-				col.WhereModifiersRust = col.GetModifiersRust()
-				col.WhereInsModifiersRust = col.GetRustModifiersIns()
-			}
-
-			if table.HasPrimaryKey  {
-				//OutPutBuffer.RustTables = append(OutPutBuffer.RustTables, table)
-			}
-		}
-
-		//PertyPrint(OutPutBuffer.RustTables)
-		PertyPrint(OutPutBuffer.Tables)
-		rustBuild(OutPutBuffer)
-		//goBuild(OutPutBuffer)
-		//PertyPrint(OutPutBuffer.Tables)
-	*/
 }

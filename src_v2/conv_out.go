@@ -21,8 +21,10 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 			WhereInsModifiersRust: nil, // below
 		}
 
-		oCol.WhereModifiersRust = oCol.GetModifiersRust()
-		oCol.WhereInsModifiersRust = oCol.GetRustModifiersIns()
+		// Notes: We commented this as in our dev process the debug output is log, we add them later at
+		//	runner func.
+		//oCol.WhereModifiersRust = oCol.GetModifiersRust()
+		//oCol.WhereInsModifiersRust = oCol.GetRustModifiersIns()
 
 		if nativeTable.SinglePrimaryKey != nil && nativeTable.SinglePrimaryKey.ColumnName == nCol.ColumnName {
 			oCol.IsSinglePrimary = true
