@@ -45,8 +45,25 @@ func Run() {
 	//PPJson(OutPutBuffer)
 
 	PertyPrint(OutPutBuffer.Tables)
+
+	setFilteredTables(OutPutBuffer)
+
 	rustBuild(OutPutBuffer)
 	//goBuild(OutPutBuffer)
 	//PertyPrint(OutPutBuffer.Tables)
 
+}
+
+func setFilteredTables(gen *GenOut) {
+	tables := []*OutTable{}
+	for _, t := range gen.Tables {
+		// We can skip any tables that we do not want in here. For now process all of them.
+		// todo support multi primay keys
+		if t.SinglePrimaryKey == nil {
+			continue
+		}
+		tables = append(tables, t)
+	}
+
+	gen.TablesFiltered = tables
 }

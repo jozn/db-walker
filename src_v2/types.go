@@ -6,7 +6,8 @@ import (
 )
 
 type GenOut struct {
-	Tables []*OutTable
+	Tables         []*OutTable
+	TablesFiltered []*OutTable // Only those table we have interest on
 }
 
 // Mysql Native Types
