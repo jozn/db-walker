@@ -14,6 +14,7 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 			IsNullAble:            nCol.IsNullAble,
 			IsSinglePrimary:       false, // below
 			IsInPrimary:           false, // below
+			IsPrimary:             nCol.IsPrimary,
 			IsUnique:              nCol.IsUnique,
 			IsAutoIncr:            nCol.IsAutoIncrement,
 			RustType:              typRs,
@@ -44,14 +45,14 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 	// Index - Make output Indexes array ( []OutIndex )
 	outIndices := []*OutIndex{}
 	for _, nativeIndex := range nativeTable.Indexes {
-		// No single primary
+		// No single primary todo all all index regardless
 		if nativeIndex.IsPrimary && len(nativeIndex.Columns) == 1 {
 			continue
 		}
 
 		oIndx := &OutIndex{
 			IndexName: nativeIndex.IndexName,
-			IsUnique:  nativeIndex.IsUnique || nativeIndex.IndexName == "PRIMARY", // Primary keys are always unique
+			IsUnique:  nativeIndex.IsUnique || nativeIndex.IndexName == "PRIMARY", // IsPrimary keys are always unique
 			IsPrimary: nativeIndex.IsPrimary,                                      // multi ones
 			ColNum:    len(nativeIndex.Columns),
 			Columns:   nil, // below
@@ -79,7 +80,8 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 		Comment:             nativeTable.Comment,
 		Columns:             nil, // below
 		SinglePrimaryKey:    nil,
-		PrimaryKeys:         nil, // deprecated
+		AutoIncrKey:         nil, // below
+		PrimaryKeys:         nil,
 		Indexes:             nil, // below
 		SchemeTable:         fmt.Sprintf("`%s`.`%s`", nativeTable.DataBase, nativeTable.TableName),
 	}
@@ -94,6 +96,22 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 				outT.SinglePrimaryKey = oCol
 			}
 		}
+	}
+
+	// Set IsPrimary
+	for _, oCol := range outColumns {
+		if oCol.IsAutoIncr {
+			outT.AutoIncrKey = oCol
+		}
+
+		if oCol.IsInPrimary || oCol.IsSinglePrimary {
+			outT.PrimaryKeys = append(outT.PrimaryKeys, oCol)
+		}
+	}
+
+	// temp todo remvoe this
+	if outT.SinglePrimaryKey == nil {
+		//		outT.SinglePrimaryKey = outT.Columns[0]
 	}
 
 	outT.Columns = outColumns

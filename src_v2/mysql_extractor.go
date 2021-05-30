@@ -65,7 +65,7 @@ func mysql_loadTables(db *sqlx.DB, schema string, relkind string) (res []*Native
 			}
 		}
 
-		// Primary columns set
+		// IsPrimary columns set
 		if len(primaryCols) == 1 {
 			nt.SinglePrimaryKey = primaryCols[0]
 		} else if len(primaryCols) >= 2 {

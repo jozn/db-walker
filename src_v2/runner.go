@@ -44,7 +44,7 @@ func Run() {
 
 	//PPJson(OutPutBuffer)
 
-	PertyPrint(OutPutBuffer.Tables)
+	//PertyPrint(OutPutBuffer.Tables)
 
 	setFilteredTables(OutPutBuffer)
 
@@ -60,7 +60,7 @@ func setFilteredTables(gen *GenOut) {
 		// We can skip any tables that we do not want in here. For now process all of them.
 		// todo support multi primay keys
 		if t.SinglePrimaryKey == nil {
-			continue
+			//continue
 		}
 		tables = append(tables, t)
 	}

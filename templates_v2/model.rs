@@ -30,26 +30,26 @@ impl FromRow for {{ .TableNameCamel }} {
 
 impl {{ .TableNameCamel }} {
 
-{{- if .IsAutoIncr  }}
-    pub async fn insert(&self, pool: &Pool) -> Result<{{ .TableNameCamel }},MyError> {
-        let mut conn = pool.get_conn().await?;
+{{- if .AutoIncrKey }}
+    pub async fn insert(&self, spool: &SPool) -> Result<{{ .TableNameCamel }},MyError> {
+        let mut conn = spool.pool.get_conn().await?;
 
-        let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .SinglePrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .SinglePrimaryKey.ColumnName }})";
-        let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }}]);
+        let query = format!(r"INSERT INTO {:}.{{ .TableName }} ({{ colnames .Columns .AutoIncrKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .AutoIncrKey.ColumnName }})",&spool.database);
+        let p = Params::Positional(vec![{{ .GetRustParamNoneIncrKeys }}]);
 
         let qr = conn.exec_iter(
             query, p
         ).await?;
 
         let mut cp = self.clone();
-        cp.{{ .SinglePrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .SinglePrimaryKey.RustType }};
+        cp.{{ .AutoIncrKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .AutoIncrKey.RustType }};
         Ok(cp)
     }
 {{ else }}
-    pub async fn replace(&self, pool: &Pool) -> Result<{{ .TableNameCamel }},MyError> {
-        let mut conn = pool.get_conn().await?;
+    pub async fn insert(&self, spool: &SPool) -> Result<{{ .TableNameCamel }},MyError> {
+        let mut conn = spool.pool.get_conn().await?;
 
-        let query = r"REPLACE INTO {{ $tableScheme }} ({{ colnames .Columns }}) VALUES ({{ colvals_dollar . .Columns }})";
+        let query = format!(r"INSERT INTO {:}.{{ .TableName }} ({{ colnames .Columns }}) VALUES ({{ colvals_dollar . .Columns }})",&spool.database);
         let p = Params::Positional(vec![{{ .GetRustParam }}]);
 
         conn.exec_iter(
@@ -61,35 +61,12 @@ impl {{ .TableNameCamel }} {
     }
 {{- end }}
 
-    pub async fn replace_dep(&self, pool: &Pool) -> Result<{{ .TableNameCamel }},MyError> {
-        let mut conn = pool.get_conn().await?;
-{{ if .IsAutoIncr  }}
-        let query = r"INSERT INTO {{ $tableScheme }} ({{ colnames .Columns .SinglePrimaryKey.ColumnName }}) VALUES ({{ colvals_dollar . .Columns .SinglePrimaryKey.ColumnName }})";
-        let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }}]);
+    // todo add replace with coping insert after it's complete
 
-        let qr = conn.exec_iter(
-            query, p
-        ).await?;
-
-        let mut cp = self.clone();
-        cp.{{ .SinglePrimaryKey.ColumnName }} = qr.last_insert_id().unwrap() as {{ .SinglePrimaryKey.RustType }};
-{{ else }}
-        let query = r"REPLACE INTO {{ $tableScheme }} ({ colnames .PrimaryKeys}}) VALUES ({ colvals_dollar . .PrimaryKeys}})";
-        let p = Params::Positional(vec![{{ .GetRustParam }}]);
-
-        conn.exec_iter(
-            query, p
-        ).await?;
-
-        let cp = self.clone();
-{{ end }}
-       Ok(cp)
-    }
-
-    pub async fn update(&self, pool: &Pool) -> Result<(),MyError> {
-        let mut conn = pool.get_conn().await?;
-        let query = r"UPDATE {{ $tableScheme }} SET {{ .GetRustUpdateFrag }} WHERE {{ .GetRustUpdateKeysWhereFrag }} ";
-        let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKey }},  self.{{ .SinglePrimaryKey.ColumnName }}.clone().into() ]);
+    pub async fn update(&self, spool: &SPool) -> Result<(),MyError> {
+        let mut conn = spool.pool.get_conn().await?;
+        let query = format!(r"UPDATE `{:}`.{{ .TableName }}` SET {{ .GetRustUpdateFrag }} WHERE {{ .GetRustUpdateKeysWhereFrag }} ", &spool.database);
+        let p = Params::Positional(vec![{{ .GetRustParamNoPrimaryKeys }}, {{ .GetRustParamPrimaryKeys }} ]);
 
         let qr = conn.exec_iter(
             query, p
@@ -98,11 +75,11 @@ impl {{ .TableNameCamel }} {
         Ok(())
     }
 
-    pub async fn delete(&self, pool: &Pool) -> Result<(),MyError> {
-        let mut conn = pool.get_conn().await?;
+    pub async fn delete(&self, spool: &SPool) -> Result<(),MyError> {
+        let mut conn = spool.pool.get_conn().await?;
 
-        let query = r"DELETE FROM {{ $tableScheme }} WHERE {{ .GetRustUpdateKeysWhereFrag }} ";
-        let p = Params::Positional(vec![self.{{ .SinglePrimaryKey.ColumnName }}.clone().into()]);
+        let query = format!(r"DELETE FROM `{:}`.{{ .TableName }}` WHERE {{ .GetRustUpdateKeysWhereFrag }} ", &spool.database);
+        let p = Params::Positional(vec![{{ .GetRustParamPrimaryKeys }}]);
 
         conn.exec_drop(
             query, p
@@ -116,12 +93,6 @@ impl {{ .TableNameCamel }} {
 #[derive(Default, Debug)]
 pub struct {{ .TableNameCamel }}Selector {
     q: TQuery
-/*     wheres: Vec<WhereClause>,
-    wheres_ins: Vec<WhereInClause>,
-    select_cols: Vec<&'static str>,
-    order_by:  Vec<&'static str>,
-    limit: u32,
-    offset: u32, */
 }
 
 impl {{ .TableNameCamel }}Selector {

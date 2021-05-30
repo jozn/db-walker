@@ -58,7 +58,8 @@ type OutTable struct {
 	DataBase            string
 	Comment             string
 	Columns             []*OutColumn
-	SinglePrimaryKey    *OutColumn
+	SinglePrimaryKey    *OutColumn // deprecated
+	AutoIncrKey         *OutColumn
 	PrimaryKeys         []*OutColumn //used for composite keys -- Note: not used in gen as
 	Indexes             []*OutIndex
 	// Views
@@ -71,7 +72,8 @@ type OutColumn struct {
 	Ordinal         int // From 1
 	IsNullAble      bool
 	IsSinglePrimary bool
-	IsInPrimary     bool // if multi primary and this col is included
+	IsInPrimary     bool // deprecated if multi primary and this col is included
+	IsPrimary       bool // if unique index or sinlge primary
 	IsUnique        bool // if unique index or sinlge primary
 	IsAutoIncr      bool
 	// Views
@@ -82,7 +84,7 @@ type OutColumn struct {
 	WhereInsModifiersRust []WhereModifierIns
 }
 
-// Only None Single Primary
+// Only None Single IsPrimary
 type OutIndex struct {
 	IndexName string // index_name
 	IsUnique  bool   // is_unique
@@ -144,7 +146,7 @@ func (t *OutTable) GetRustParam() string {
 	return strings.Join(arr, ", ")
 }
 
-func (t *OutTable) GetRustParamNoPrimaryKey() string {
+func (t *OutTable) GetRustParamNoPrimaryKey_dep() string {
 	arr := []string{}
 	for _, c := range t.Columns {
 		if t.SinglePrimaryKey != nil && c.ColumnName != t.SinglePrimaryKey.ColumnName {
@@ -154,10 +156,40 @@ func (t *OutTable) GetRustParamNoPrimaryKey() string {
 	return strings.Join(arr, ", ")
 }
 
+func (t *OutTable) GetRustParamNoneIncrKeys() string {
+	arr := []string{}
+	for _, c := range t.Columns {
+		if !c.IsAutoIncr {
+			arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
+		}
+	}
+	return strings.Join(arr, ", ")
+}
+
+func (t *OutTable) GetRustParamPrimaryKeys() string {
+	arr := []string{}
+	for _, c := range t.Columns {
+		if c.IsPrimary {
+			arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
+		}
+	}
+	return strings.Join(arr, ", ")
+}
+
+func (t *OutTable) GetRustParamNoPrimaryKeys() string {
+	arr := []string{}
+	for _, c := range t.Columns {
+		if !c.IsPrimary {
+			arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
+		}
+	}
+	return strings.Join(arr, ", ")
+}
+
 func (t *OutTable) GetRustUpdateFrag() string {
 	arr := []string{}
 	for _, c := range t.Columns {
-		if !c.IsSinglePrimary { //todo
+		if !c.IsPrimary {
 			arr = append(arr, fmt.Sprintf("%s = ?", c.ColumnName))
 		}
 		/*if c.ColumnName != t.SinglePrimaryKey.ColumnName {
