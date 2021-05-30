@@ -6,7 +6,7 @@ use mysql_common::row::ColumnIndex;
 use mysql_common::value::Value;
 use crate::mysql_shared::*;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Default, Clone, PartialEq, Eq, Debug)]
 pub struct {{ .TableNameCamel }}  { // {{ .TableName }}
 {{- range .Columns }}
     pub {{ .ColumnName }}: {{ .RustType }},
@@ -123,40 +123,9 @@ impl {{ .TableNameCamel }}Selector {
     }
     {{ end }}
 
-    fn _to_cql(&self) ->  (String, Vec<Value>)  {
-        let cql_select = if self.q.select_cols.is_empty() {
-            "*".to_string()
-        } else {
-            self.q.select_cols.join(", ")
-        };
-
-        let mut cql_query = format!("SELECT {} FROM {{.SchemeTable}}", cql_select);
-
-        let (cql_where, where_values) = _get_where(self.q.wheres.clone());
-
-        if where_values.len() > 0 {
-            cql_query.push_str(&format!(" WHERE {}",&cql_where));
-        }
-
-        if self.q.order_by.len() > 0 {
-            let cql_orders = self.q.order_by.join(", ");
-            cql_query.push_str( &format!(" ORDER BY {}", &cql_orders));
-        };
-
-        if self.q.limit != 0  {
-            cql_query.push_str(&format!(" LIMIT {} ", self.q.limit));
-        };
-
-        if self.q.offset != 0  {
-            cql_query.push_str(&format!(" OFFSET {} ", self.q.offset));
-        };
-
-        (cql_query, where_values)
-    }
-
-    pub async fn _get_rows_with_size(&mut self, session: &Pool, size: i64) -> Result<Vec<{{ .TableNameCamel }}>, MyError>   {
-        let mut conn = session.get_conn().await?;
-        let(cql_query, query_values) = self._to_cql();
+    pub async fn _get_rows_with_size(&mut self, session: &SPool, size: i64) -> Result<Vec<{{ .TableNameCamel }}>, MyError>   {
+        let mut conn = session.pool.get_conn().await?;
+        let(cql_query, query_values) = self.q._to_sql_selector();
 
         println!("{} - {:?}", &cql_query, &query_values);
 
@@ -171,11 +140,11 @@ impl {{ .TableNameCamel }}Selector {
         Ok(query_result)
     }
 
-    pub async fn get_rows(&mut self, session: &Pool) -> Result<Vec<{{ .TableNameCamel }}>, MyError>{
+    pub async fn get_rows(&mut self, session: &SPool) -> Result<Vec<{{ .TableNameCamel }}>, MyError>{
         self._get_rows_with_size(session,-1).await
     }
 
-    pub async fn get_row(&mut self, session: &Pool) -> Result<{{ .TableNameCamel }}, MyError>{
+    pub async fn get_row(&mut self, session: &SPool) -> Result<{{ .TableNameCamel }}, MyError>{
         let rows = self._get_rows_with_size(session,1).await?;
 
         let opt = rows.get(0);
@@ -186,11 +155,73 @@ impl {{ .TableNameCamel }}Selector {
     }
 
     // Modifiers
-
     {{ .GetRustSelectorOrders }}
+    {{ .GetRustWheresTmplOut }}
+    {{ .GetRustWhereInsTmplOut }}
+}
+
+{{- $deleterType := printf "%s_Deleter" .TableNameCamel }}
+
+#[derive(Default, Debug)]
+pub struct {{ $deleterType }} {
+    q: TQuery
+}
+
+impl {{ $deleterType }} {
+    pub fn new() -> Self {
+        {{ $deleterType }}::default()
+    }
+
+    //each column delete
+    {{- range .Columns }}
+    pub fn delete_{{ .ColumnName }}(&mut self) -> &mut Self {
+        self.q.delete_cols.push("{{.ColumnName}}");
+        self
+    }
+    {{ end }}
+
+    pub async fn delete(&mut self, session: SPool) -> Result<(),MyError> {
+        delete_rows(&self.q, session).await
+        /*let mut conn = session.pool.get_conn().await?;
+        let del_col = self.q.delete_cols.join(", ");
+
+        let (cql_where, where_values) = _get_where(self.q.wheres.clone());
+
+        let cql_query = format!("DELETE {} FROM `twitter`.`tweet` WHERE {}", del_col, cql_where);
+
+        let p = Params::Positional(where_values);
+
+        println!("{} - {:?}", &cql_query, &p);
+
+        let query_result = conn.exec_drop(cql_query,p,).await?;
+
+        Ok(())*/
+    }
+
+    pub fn delete(&mut self, session: SPool) -> Result<(),CWError> {
+        let del_col = self.q.delete_cols.join(", ");
+
+        let  mut where_str = vec![];
+        let mut where_arr = vec![];
+
+        for w in self.q.wheres.clone() {
+            where_str.push(w.condition);
+            where_arr.push(w.args)
+        }
+
+        let where_str = where_str.join(" ");
+
+        let cql_query = format!("DELETE {} FROM {{ .SchemeTable }} WHERE {}", del_col, where_str);
+
+        let query_values = QueryValues::SimpleValues(where_arr);
+        println!("{} - {:?}", &cql_query, &query_values);
+
+        session.query_with_values(cql_query, query_values)?;
+
+        Ok(())
+    }
 
     {{ .GetRustWheresTmplOut }}
 
     {{ .GetRustWhereInsTmplOut }}
-
 }

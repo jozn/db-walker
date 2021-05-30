@@ -11,6 +11,7 @@ func NewTemplateFuncs() template.FuncMap {
 		"toUpper":        strings.ToUpper,
 		"colnames":       colnames,
 		"colvals_dollar": colvals_dollar,
+		"printf": fmt.Sprintf,
 	}
 }
 

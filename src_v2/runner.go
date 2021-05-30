@@ -65,5 +65,5 @@ func setFilteredTables(gen *GenOut) {
 		tables = append(tables, t)
 	}
 
-	gen.TablesFiltered = tables
+	gen.TablesFiltered = tables[0:1]
 }
