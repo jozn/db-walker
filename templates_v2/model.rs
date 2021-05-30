@@ -155,7 +155,7 @@ impl {{ .TableNameCamel }}Selector {
     }
 
     // Modifiers
-    {{ .GetRustSelectorOrders }}
+    {{ .GetRustOrdersTmplOut }}
     {{ .GetRustWheresTmplOut }}
     {{ .GetRustWhereInsTmplOut }}
 }
@@ -172,6 +172,11 @@ impl {{ $deleterType }} {
         {{ $deleterType }}::default()
     }
 
+    pub fn limit(&mut self, size: u32) -> &mut Self {
+        self.q.limit = size;
+        self
+    }
+
     //each column delete
     {{- range .Columns }}
     pub fn delete_{{ .ColumnName }}(&mut self) -> &mut Self {
@@ -182,46 +187,9 @@ impl {{ $deleterType }} {
 
     pub async fn delete(&mut self, session: SPool) -> Result<(),MyError> {
         delete_rows(&self.q, session).await
-        /*let mut conn = session.pool.get_conn().await?;
-        let del_col = self.q.delete_cols.join(", ");
-
-        let (cql_where, where_values) = _get_where(self.q.wheres.clone());
-
-        let cql_query = format!("DELETE {} FROM `twitter`.`tweet` WHERE {}", del_col, cql_where);
-
-        let p = Params::Positional(where_values);
-
-        println!("{} - {:?}", &cql_query, &p);
-
-        let query_result = conn.exec_drop(cql_query,p,).await?;
-
-        Ok(())*/
     }
 
-    pub fn delete(&mut self, session: SPool) -> Result<(),CWError> {
-        let del_col = self.q.delete_cols.join(", ");
-
-        let  mut where_str = vec![];
-        let mut where_arr = vec![];
-
-        for w in self.q.wheres.clone() {
-            where_str.push(w.condition);
-            where_arr.push(w.args)
-        }
-
-        let where_str = where_str.join(" ");
-
-        let cql_query = format!("DELETE {} FROM {{ .SchemeTable }} WHERE {}", del_col, where_str);
-
-        let query_values = QueryValues::SimpleValues(where_arr);
-        println!("{} - {:?}", &cql_query, &query_values);
-
-        session.query_with_values(cql_query, query_values)?;
-
-        Ok(())
-    }
-
+    {{ .GetRustOrdersTmplOut }}
     {{ .GetRustWheresTmplOut }}
-
     {{ .GetRustWhereInsTmplOut }}
 }

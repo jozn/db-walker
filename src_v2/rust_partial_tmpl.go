@@ -100,7 +100,7 @@ func (table *OutTable) GetRustWhereInsTmplOut() string {
 }
 
 // Selectors
-func (table *OutTable) GetRustSelectorOrders() string {
+func (table *OutTable) GetRustOrdersTmplOut() string {
 	const TPL = `
     pub fn order_by_{{ .Col.ColumnName }}_asc(&mut self) -> &mut Self {
 		self.q.order_by.push("{{ .Col.ColumnName }} ASC");
