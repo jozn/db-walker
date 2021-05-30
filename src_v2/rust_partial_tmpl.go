@@ -15,7 +15,7 @@ func (table *OutTable) GetRustWheresTmplOut() string {
             condition: "{{ .Mod.AndOr }} {{ .Col.ColumnName }} {{ .Mod.Condition }} ?".to_string(),
             args: val.into(),
         };
-        self.wheres.push(w);
+        self.q.wheres.push(w);
         self
     }
 `
@@ -62,7 +62,7 @@ func (table *OutTable) GetRustWhereInsTmplOut() string {
 			condition: format!("{{ .Mod.AndOr }} {{ .Col.ColumnName }} IN ({})", marks),
             args: arr,
         };
-        self.wheres_ins.push(w);
+        self.q.wheres_ins.push(w);
         self
     }
 `
@@ -103,12 +103,12 @@ func (table *OutTable) GetRustWhereInsTmplOut() string {
 func (table *OutTable) GetRustSelectorOrders() string {
 	const TPL = `
     pub fn order_by_{{ .Col.ColumnName }}_asc(&mut self) -> &mut Self {
-		self.order_by.push("{{ .Col.ColumnName }} ASC");
+		self.q.order_by.push("{{ .Col.ColumnName }} ASC");
         self
     }
 
 	pub fn order_by_{{ .Col.ColumnName }}_desc(&mut self) -> &mut Self {
-		self.order_by.push("{{ .Col.ColumnName }} DESC");
+		self.q.order_by.push("{{ .Col.ColumnName }} DESC");
         self
     }
 `

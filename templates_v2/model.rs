@@ -115,12 +115,13 @@ impl {{ .TableNameCamel }} {
 
 #[derive(Default, Debug)]
 pub struct {{ .TableNameCamel }}Selector {
-    wheres: Vec<WhereClause>,
+    q: TQuery
+/*     wheres: Vec<WhereClause>,
     wheres_ins: Vec<WhereInClause>,
     select_cols: Vec<&'static str>,
     order_by:  Vec<&'static str>,
     limit: u32,
-    offset: u32,
+    offset: u32, */
 }
 
 impl {{ .TableNameCamel }}Selector {
@@ -129,12 +130,12 @@ impl {{ .TableNameCamel }}Selector {
     }
 
     pub fn limit(&mut self, size: u32) -> &mut Self {
-        self.limit = size;
+        self.q.limit = size;
         self
     }
 
     pub fn offset(&mut self, size: u32) -> &mut Self {
-        self.offset = size;
+        self.q.offset = size;
         self
     }
 
@@ -146,37 +147,37 @@ impl {{ .TableNameCamel }}Selector {
     //each column select
     {{- range .Columns }}
     pub fn select_{{ .ColumnName }}(&mut self) -> &mut Self {
-        self.select_cols.push("{{.ColumnName}}");
+        self.q.select_cols.push("{{.ColumnName}}");
         self
     }
     {{ end }}
 
     fn _to_cql(&self) ->  (String, Vec<Value>)  {
-        let cql_select = if self.select_cols.is_empty() {
+        let cql_select = if self.q.select_cols.is_empty() {
             "*".to_string()
         } else {
-            self.select_cols.join(", ")
+            self.q.select_cols.join(", ")
         };
 
         let mut cql_query = format!("SELECT {} FROM {{.SchemeTable}}", cql_select);
 
-        let (cql_where, where_values) = _get_where(self.wheres.clone());
+        let (cql_where, where_values) = _get_where(self.q.wheres.clone());
 
         if where_values.len() > 0 {
             cql_query.push_str(&format!(" WHERE {}",&cql_where));
         }
 
-        if self.order_by.len() > 0 {
-            let cql_orders = self.order_by.join(", ");
+        if self.q.order_by.len() > 0 {
+            let cql_orders = self.q.order_by.join(", ");
             cql_query.push_str( &format!(" ORDER BY {}", &cql_orders));
         };
 
-        if self.limit != 0  {
-            cql_query.push_str(&format!(" LIMIT {} ", self.limit));
+        if self.q.limit != 0  {
+            cql_query.push_str(&format!(" LIMIT {} ", self.q.limit));
         };
 
-        if self.offset != 0  {
-            cql_query.push_str(&format!(" OFFSET {} ", self.offset));
+        if self.q.offset != 0  {
+            cql_query.push_str(&format!(" OFFSET {} ", self.q.offset));
         };
 
         (cql_query, where_values)
@@ -222,37 +223,3 @@ impl {{ .TableNameCamel }}Selector {
     {{ .GetRustWhereInsTmplOut }}
 
 }
-/*
-///////////////// SHARED CODE ///////////
-#[derive(Debug, Clone)]
-pub struct WhereClause {
-    // pub condition: &'static str,
-    pub condition: String,
-    pub args: Value,
-}
-
-fn _get_where(wheres: Vec<WhereClause>) ->  (String, Vec<Value>) {
-    let mut values = vec![];
-    let  mut where_str = vec![];
-
-    for w in wheres {
-        where_str.push(w.condition);
-        values.push(w.args)
-    }
-    let cql_where = where_str.join(" ");
-
-    (cql_where, values)
-}
-
-#[derive(Debug)]
-pub enum MyError { // MySQL Error
-    NotFound,
-    MySqlError(mysql_async::Error),
-}
-
-impl From<mysql_async::Error> for MyError{
-    fn from(err: mysql_async::Error) -> Self {
-        MyError::MySqlError(err)
-    }
-}
-*/
