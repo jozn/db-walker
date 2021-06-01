@@ -2,6 +2,7 @@ package src_v2
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"text/template"
 )
@@ -133,6 +134,92 @@ func (table *OutTable) GetRustOrdersTmplOut() string {
 	return strings.Join(fnsOut, "")
 }
 
+
+
+// This produces Getter by primary key [whether this functionality was worth the effort is a good question]
+func (oIndex *OutIndex) GetRustPrimaryGetter(table *OutTable) string {
+	// Primary Getters
+	type _RustGetter_ struct {
+		//fnName    string
+		paramName string
+		paramType string
+		callName  string
+	}
+
+	//============== Fill Array ===============
+	arr := []_RustGetter_{}
+	paramCnt := 1
+	// Partion keys
+	for i := 0; i < len(oIndex.Columns); i++ {
+		col := oIndex.Columns[i]
+
+		param := fmt.Sprintf("%s", col.ColumnName)
+		//fnName := col.ColumnNameRust
+		callName := fmt.Sprintf("%s_eq(%s)", col.ColumnName, param)
+		if i > 0 {
+			//fnName = fmt.Sprintf("_and_%s", col.ColumnNameRust)
+			callName = fmt.Sprintf("and_%s_eq(%s)", col.ColumnName, param)
+		}
+
+		f := _RustGetter_{
+			//fnName:    fnName,
+			paramName: param,
+			paramType: col.RustTypeBorrow,
+			callName:  callName,
+		}
+		arr = append(arr, f)
+		paramCnt += 1
+	}
+
+	//================ Make Str Output =================
+	fnName := oIndex.IndexName
+	if oIndex.IsPrimary {
+		fnName = fmt.Sprintf("get_%s", table.TableName)
+	}
+	fnParam := []string{}
+	fnSetter := fmt.Sprintf("%sSelector::new()", table.TableNameCamel)
+	for i := 0; i < len(arr); i++ {
+		f := arr[i]
+		fnParam = append(fnParam, f.paramName+": "+f.paramType)
+		fnSetter += "\n\t\t." + f.callName
+	}
+
+	//================ Build ==================
+	const TPL_UNIQUE = `
+pub async fn {{ .FnName }}({{ .FnParam }}, spool: &SPool) -> Result<{{.Table.TableNameCamel}},MyError> {
+	let m = {{ .FnSetter }}
+		.get_row(spool).await?;
+	Ok(m)
+}
+`
+
+	const TPL_MULTI = `
+pub async fn {{ .FnName }}({{ .FnParam }}, spool: &SPool) -> Result<Vec<{{.Table.TableNameCamel}}>,MyError> {
+	let m = {{ .FnSetter }}
+		.get_rows(spool).await?;
+	Ok(m)
+}
+`
+	parm := struct {
+		FnName   string
+		FnParam  string
+		FnSetter string
+		Table    *OutTable
+	}{
+		FnName:   fnName,
+		FnParam:  strings.Join(fnParam, ","),
+		FnSetter: fnSetter,
+		Table:    table,
+	}
+
+	if oIndex.IsUnique {
+		out := _runPartialTmpl("INDX", TPL_UNIQUE, parm)
+		return out
+	}
+
+	out := _runPartialTmpl("INDX", TPL_MULTI, parm)
+	return out
+}
 /*
 // Updater
 func (table *OutTable) GetRustUpdaterFnsOut() string {

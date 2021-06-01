@@ -27,6 +27,7 @@ impl FromRow for {{ .TableNameCamel }} {
 }
 
 {{- $tableScheme := .SchemeTable }}
+{{- $table := . }}
 
 impl {{ .TableNameCamel }} {
 
@@ -289,3 +290,8 @@ pub async fn {{ .TableName }}_mass_insert(arr :&Vec<{{ .TableNameCamel }}>, spoo
 
     Ok(())
 }
+
+// Index
+{{- range .Indexes -}}
+    {{ .GetRustPrimaryGetter $table }}
+{{- end }}

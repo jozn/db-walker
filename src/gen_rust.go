@@ -83,7 +83,7 @@ func _rustGetTemplate(tplName string) *template.Template {
 
 func (table *Table) GetRustWheresTmplOut() string {
 	const TPL = `
-    pub fn {{ .Mod.FuncName }} (&mut self, val: {{ .Col.TypeRustBorrow }} ) -> &mut Self {
+    pub fn {{ .Mod.FuncNameRust }} (&mut self, val: {{ .Col.TypeRustBorrow }} ) -> &mut Self {
         let w = WhereClause{
             condition: "{{ .Mod.AndOr }} {{ .Col.ColumnNameRust }} {{ .Mod.Condition }} ?".to_string(),
             args: val.into(),
@@ -129,7 +129,7 @@ func (table *Table) GetRustWheresTmplOut() string {
 // todo (maybe): b/c of diffrence in api of cassandar and mysql libs for now we not support Ins > use or_{col} for now
 func (table *Table) GetRustWhereInsTmplOut() string {
 	const TPL = `
-    pub fn {{ .Mod.FuncName }} (&mut self, val: Vec<{{ .Col.TypeRustBorrow }}> ) -> &mut Self {
+    pub fn {{ .Mod.FuncNameRust }} (&mut self, val: Vec<{{ .Col.TypeRustBorrow }}> ) -> &mut Self {
 		let len = val.len();
         if len == 0 {
             return self

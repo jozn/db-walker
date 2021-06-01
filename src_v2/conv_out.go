@@ -51,11 +51,15 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 		}
 
 		oIndx := &OutIndex{
-			IndexName: nativeIndex.IndexName,
-			IsUnique:  nativeIndex.IsUnique || nativeIndex.IndexName == "PRIMARY", // IsPrimary keys are always unique
-			IsPrimary: nativeIndex.IsPrimary,                                      // multi ones
-			ColNum:    len(nativeIndex.Columns),
-			Columns:   nil, // below
+			IndexName:    nativeIndex.IndexName,
+			IsUnique:     nativeIndex.IsUnique || nativeIndex.IndexName == "PRIMARY", // IsPrimary keys are always unique
+			IsPrimary:    nativeIndex.IsPrimary,                                      // multi ones
+			ColNum:       len(nativeIndex.Columns),
+			Columns:      nil, // below
+			//FuncNameRust: nativeIndex.IndexName,
+		}
+		if oIndx.IsPrimary {
+			//oIndx.FuncNameRust = fmt.Sprintf("get_%", nativeTable.TableName)
 		}
 
 		for _, xCol := range nativeIndex.Columns {

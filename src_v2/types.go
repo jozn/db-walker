@@ -85,11 +85,12 @@ type OutColumn struct {
 
 // Only None Single IsPrimary
 type OutIndex struct {
-	IndexName string // index_name
-	IsUnique  bool   // is_unique
-	IsPrimary bool   // Just multi columns primary
-	ColNum    int    // is_primary
-	Columns   []*OutColumn
+	IndexName    string // index_name
+	IsUnique     bool   // is_unique
+	IsPrimary    bool   // Just multi columns primary
+	ColNum       int    // is_primary
+	Columns      []*OutColumn
+	//FuncNameRust string
 }
 
 // For Rust
