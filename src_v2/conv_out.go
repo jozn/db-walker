@@ -47,7 +47,7 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 	for _, nativeIndex := range nativeTable.Indexes {
 		// No single primary todo all all index regardless
 		if nativeIndex.IsPrimary && len(nativeIndex.Columns) == 1 {
-			continue
+			//continue
 		}
 
 		oIndx := &OutIndex{
@@ -79,7 +79,6 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 		DataBase:            nativeTable.DataBase,
 		Comment:             nativeTable.Comment,
 		Columns:             nil, // below
-		SinglePrimaryKey:    nil,
 		AutoIncrKey:         nil, // below
 		PrimaryKeys:         nil,
 		Indexes:             nil, // below
@@ -90,15 +89,9 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 		if nativeTable.SinglePrimaryKey.IsAutoIncrement {
 			outT.IsAutoIncrPrimary = true
 		}
-
-		for _, oCol := range outColumns {
-			if oCol.ColumnName == nativeTable.SinglePrimaryKey.ColumnName {
-				outT.SinglePrimaryKey = oCol
-			}
-		}
 	}
 
-	// Set IsPrimary
+	// Set Primary Keys
 	for _, oCol := range outColumns {
 		if oCol.IsAutoIncr {
 			outT.AutoIncrKey = oCol
@@ -107,11 +100,6 @@ func convNativeTableToOut(nativeTable NativeTable) *OutTable {
 		if oCol.IsInPrimary || oCol.IsSinglePrimary {
 			outT.PrimaryKeys = append(outT.PrimaryKeys, oCol)
 		}
-	}
-
-	// temp todo remvoe this
-	if outT.SinglePrimaryKey == nil {
-		//		outT.SinglePrimaryKey = outT.Columns[0]
 	}
 
 	outT.Columns = outColumns

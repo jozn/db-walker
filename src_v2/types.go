@@ -58,7 +58,6 @@ type OutTable struct {
 	DataBase            string
 	Comment             string
 	Columns             []*OutColumn
-	SinglePrimaryKey    *OutColumn // deprecated
 	AutoIncrKey         *OutColumn
 	PrimaryKeys         []*OutColumn //used for composite keys -- Note: not used in gen as
 	Indexes             []*OutIndex
@@ -142,16 +141,6 @@ func (t *OutTable) GetRustParam() string {
 	arr := []string{}
 	for _, c := range t.Columns {
 		arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
-	}
-	return strings.Join(arr, ", ")
-}
-
-func (t *OutTable) GetRustParamNoPrimaryKey_dep() string {
-	arr := []string{}
-	for _, c := range t.Columns {
-		if t.SinglePrimaryKey != nil && c.ColumnName != t.SinglePrimaryKey.ColumnName {
-			arr = append(arr, fmt.Sprintf("self.%s.clone().into()", c.ColumnName))
-		}
 	}
 	return strings.Join(arr, ", ")
 }

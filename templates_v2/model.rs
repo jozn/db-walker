@@ -97,7 +97,12 @@ pub struct {{ .TableNameCamel }}Selector {
 
 impl {{ .TableNameCamel }}Selector {
     pub fn new() -> Self {
-        {{ .TableNameCamel }}Selector::default()
+        {{ .TableNameCamel }}Selector{
+            q: TQuery{
+                table: "{{ .TableName }}",
+                ..Default::default()
+            }
+        }
     }
 
     pub fn limit(&mut self, size: u32) -> &mut Self {
@@ -125,7 +130,7 @@ impl {{ .TableNameCamel }}Selector {
 
     pub async fn _get_rows_with_size(&mut self, session: &SPool, size: i64) -> Result<Vec<{{ .TableNameCamel }}>, MyError>   {
         let mut conn = session.pool.get_conn().await?;
-        let(cql_query, query_values) = self.q._to_sql_selector();
+        let(cql_query, query_values) = self.q._to_sql_selector(&session.database);
 
         println!("{} - {:?}", &cql_query, &query_values);
 
@@ -170,7 +175,12 @@ pub struct {{ $updaterType }} {
 
 impl {{ $updaterType }} {
     pub fn new() -> Self {
-        {{ $updaterType }}::default()
+        {{ $updaterType }}{
+            q: TQuery{
+                table: "{{ .TableName }}",
+                ..Default::default()
+            }
+        }
     }
 
     pub fn limit(&mut self, size: u32) -> &mut Self {
@@ -205,7 +215,12 @@ pub struct {{ $deleterType }} {
 
 impl {{ $deleterType }} {
     pub fn new() -> Self {
-        {{ $deleterType }}::default()
+        {{ $deleterType }}{
+            q: TQuery{
+                table: "{{ .TableName }}",
+                ..Default::default()
+            }
+        }
     }
 
     pub fn limit(&mut self, size: u32) -> &mut Self {
@@ -251,9 +266,17 @@ pub async fn {{ .TableName }}_mass_insert(arr :&Vec<{{ .TableNameCamel }}>, spoo
 
     let mut arr_vals = vec![];
     for ar in arr {
-        {{- range .Columns }}
-                   arr_vals.push(ar.{{ .ColumnName }}.clone().into());
-        {{- end }}
+       {{- if .AutoIncrKey -}}
+            {{- range .Columns }}
+                {{ if not .IsAutoIncr -}}
+        arr_vals.push(ar.{{ .ColumnName }}.clone().into());
+                {{- end }}
+            {{- end }}
+       {{ else }}
+            {{- range .Columns }}
+        arr_vals.push(ar.{{ .ColumnName }}.clone().into());
+            {{- end }}
+        {{- end -}}
     }
 
     let p = Params::Positional(arr_vals);

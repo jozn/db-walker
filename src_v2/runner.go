@@ -29,7 +29,8 @@ func Run() {
 			OutPutBuffer.Tables = append(OutPutBuffer.Tables, outTable)
 		}
 	}
-	PertyPrint(OutPutBuffer.Tables)
+	PertyPrint(OutPutBuffer.Tables[0].Indexes)
+	PertyPrint(OutPutBuffer.Tables[1].Indexes)
 
 	// For Rust Filtering
 	// Note: We add column modifiers in here in order to have a more shorter debug outputs in above of
@@ -59,7 +60,7 @@ func setFilteredTables(gen *GenOut) {
 	for _, t := range gen.Tables {
 		// We can skip any tables that we do not want in here. For now process all of them.
 		// todo support multi primay keys
-		if t.SinglePrimaryKey == nil {
+		if t.IsAutoIncr {
 			//continue
 		}
 		tables = append(tables, t)
