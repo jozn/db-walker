@@ -11,7 +11,7 @@ import (
 var IntRE = regexp.MustCompile(`^int(32|64)?$`)
 
 func Run() {
-	DB, err := sqlx.Connect("mysql", "flipper:12345678@tcp(192.168.162.115:3306)/flip_my?charset=utf8mb4")
+	DB, err := sqlx.Connect("mysql", "flipper:12345678@tcp(192.168.92.115:3306)/flip_my?charset=utf8mb4")
 	NoErr(err)
 	DB.MapperFunc(func(s string) string { return s })
 	DB = DB.Unsafe()

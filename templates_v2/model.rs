@@ -160,7 +160,43 @@ impl {{ .TableNameCamel }}Selector {
     {{ .GetRustWhereInsTmplOut }}
 }
 
-{{- $deleterType := printf "%s_Deleter" .TableNameCamel }}
+// Updater
+{{- $updaterType := printf "%sUpdater" .TableNameCamel }}
+
+#[derive(Default, Debug)]
+pub struct {{ $updaterType }} {
+    q: TQuery
+}
+
+impl {{ $updaterType }} {
+    pub fn new() -> Self {
+        {{ $updaterType }}::default()
+    }
+
+    pub fn limit(&mut self, size: u32) -> &mut Self {
+        self.q.limit = size;
+        self
+    }
+
+    //each column delete
+    {{- range .Columns }}
+    pub fn set_{{ .ColumnName }}(&mut self, val :{{ .RustTypeBorrow }}) -> &mut Self {
+        self.q.updates.insert("{{ .ColumnName }}",val.into());
+        self
+    }
+    {{ end }}
+
+    pub async fn update(&mut self, session: &SPool) -> Result<(),MyError> {
+        update_rows(&self.q, session).await
+    }
+
+    {{ .GetRustOrdersTmplOut }}
+    {{ .GetRustWheresTmplOut }}
+    {{ .GetRustWhereInsTmplOut }}
+}
+
+// Deleter
+{{- $deleterType := printf "%sDeleter" .TableNameCamel }}
 
 #[derive(Default, Debug)]
 pub struct {{ $deleterType }} {
@@ -185,11 +221,48 @@ impl {{ $deleterType }} {
     }
     {{ end }}
 
-    pub async fn delete(&mut self, session: SPool) -> Result<(),MyError> {
+    pub async fn delete(&mut self, session: &SPool) -> Result<(),MyError> {
         delete_rows(&self.q, session).await
     }
 
     {{ .GetRustOrdersTmplOut }}
     {{ .GetRustWheresTmplOut }}
     {{ .GetRustWhereInsTmplOut }}
+}
+
+pub async fn {{ .TableName }}_mass_insert(arr :&Vec<{{ .TableNameCamel }}>, spool: &SPool) -> Result<(),MyError> {
+    let mut conn = spool.pool.get_conn().await?;
+    if arr.len() == 0 {
+        return Err(MyError::EmptySql)
+    }
+
+   {{- if .AutoIncrKey }}
+    let mut insert_fields = "({{ colnames .Columns .AutoIncrKey.ColumnName }})";
+
+    let mut vals_str = "({{ colvals_dollar . .Columns .AutoIncrKey.ColumnName }}), ".repeat(arr.len());
+   {{ else }}
+     let mut insert_fields = "({{ colnames .Columns }})";
+
+     let mut vals_str = "({{ colvals_dollar . .Columns }}), ".repeat(arr.len());
+   {{- end }}
+    let vals_str = &vals_str[0..(vals_str.len()-2)];
+
+    let query = format!(r"INSERT INTO {:}.tweet {:} VALUES {:}", &spool.database, insert_fields, vals_str);
+
+    let mut arr_vals = vec![];
+    for ar in arr {
+        {{- range .Columns }}
+                   arr_vals.push(ar.{{ .ColumnName }}.clone().into());
+        {{- end }}
+    }
+
+    let p = Params::Positional(arr_vals);
+
+    println!("{} - {:?}", &query, &p);
+
+    let qr = conn.exec_iter(
+        query, p
+    ).await?;
+
+    Ok(())
 }

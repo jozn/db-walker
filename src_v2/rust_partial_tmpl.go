@@ -133,6 +133,50 @@ func (table *OutTable) GetRustOrdersTmplOut() string {
 	return strings.Join(fnsOut, "")
 }
 
+/*
+// Updater
+func (table *OutTable) GetRustUpdaterFnsOut() string {
+	const TPL = `
+    pub fn update_{{ .Col.ColumnNameRust }}(&mut self, val: {{ .Col.TypeRustBorrow }}) -> &mut Self {
+        self.updates.insert("{{ .Col.ColumnName }} = ?", val.into());
+        self
+    }
+`
+
+	const TPL_BLOB = `
+    pub fn update_{{ .Col.ColumnNameRust }}(&mut self, val: {{ .Col.TypeRustBorrow }}) -> &mut Self {
+        self.updates.insert("{{ .Col.ColumnName }} = ?", Blob::new(val.clone()).into());
+        self
+    }
+`
+	fnsOut := []string{}
+
+	for i := 0; i < len(table.Columns); i++ {
+		col := table.Columns[i]
+
+		parm := struct {
+			Table *OutTable
+			Col   *OutColumn
+		}{
+			table, col,
+		}
+
+		var fnStr string
+
+		// Due to cdrs lib limitation we should treat blob differently
+		if col.TypeCql == "blob" {
+			fnStr = rawTemplateOutput(TPL_BLOB, parm)
+		} else {
+			fnStr = rawTemplateOutput(TPL, parm)
+		}
+
+		//fmt.Println(fnStr)
+		fnsOut = append(fnsOut, fnStr)
+	}
+
+	return strings.Join(fnsOut, "")
+}
+*/
 func _runPartialTmpl(tplName string, templ string, data interface{}) string {
 	tpl := template.New(tplName)
 	tpl, err := tpl.Parse(templ)

@@ -3,6 +3,7 @@ use mysql_async::{FromRowError, OptsBuilder, Params, Row, Pool};
 use mysql_common::row::ColumnIndex;
 
 use mysql_common::value::Value;
+use std::collections::HashMap;
 
 pub struct XXX{}
 
@@ -20,6 +21,7 @@ pub struct TQuery {
     pub select_cols: Vec<&'static str>, // Just Selector
     pub delete_cols: Vec<&'static str>, // Deleter
     pub order_by:  Vec<&'static str>,
+    pub updates: HashMap<&'static str, Value>,
     pub limit: u32,
     pub offset: u32,
 }
@@ -84,7 +86,49 @@ impl TQuery {
 
 }
 
-pub async fn delete_rows(query: &TQuery, session: SPool) -> Result<(),MyError> {
+pub async fn update_rows(query: &TQuery, session: &SPool) -> Result<(),MyError> {
+    let mut conn = session.pool.get_conn().await?;
+
+    if query.updates.is_empty() {
+        return Err(MyError::EmptySql);
+    }
+
+    // Update columns building
+    let mut all_vals = vec![];
+    let mut col_updates = vec![];
+
+    for (col,val) in query.updates.clone() {
+        all_vals.push(val);
+        col_updates.push(col);
+    }
+    let cql_update = col_updates.join(",");
+
+    // Where columns building
+    let  mut where_str = vec![];
+
+    for w in query.wheres.clone() {
+        where_str.push(w.condition);
+        all_vals.push(w.args)
+    }
+    let cql_where = where_str.join(" ");
+
+    // Build final query
+    let mut cql_query = if query.wheres.is_empty() {
+        format!("UPDATE .TableSchemeOut SET {}", cql_update)
+    } else {
+        format!("UPDATE .TableSchemeOut SET {} WHERE {}", cql_update, cql_where)
+    };
+
+    let p = Params::Positional(all_vals);
+
+    println!("{} - {:?}", &cql_query, &p);
+
+    let query_result = conn.exec_drop(cql_query,p,).await?;
+
+    Ok(())
+}
+
+pub async fn delete_rows(query: &TQuery, session: &SPool) -> Result<(),MyError> {
     let mut conn = session.pool.get_conn().await?;
     let del_col = query.delete_cols.join(", ");
 
@@ -101,9 +145,11 @@ pub async fn delete_rows(query: &TQuery, session: SPool) -> Result<(),MyError> {
     Ok(())
 }
 
+
 #[derive(Debug)]
 pub enum MyError { // MySQL Error
-NotFound,
+    NotFound,
+    EmptySql,
     MySqlError(mysql_async::Error),
 }
 
