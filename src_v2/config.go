@@ -6,9 +6,9 @@ const (
 	OUTPUT_DIR_RUST = `/hamid/life/_active/backbone/dev_play/tmp/src/my_dev/`
 )
 
-var DATABASES = []string{"twitter"}
+//var DATABASES = []string{"twitter"}
 
-//var DATABASES = []string{"flip_my"}
+var DATABASES = []string{"flip_my"}
 
 var triggerNeededArr = []string{}
 

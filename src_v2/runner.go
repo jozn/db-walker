@@ -16,26 +16,26 @@ func Run() {
 	DB.MapperFunc(func(s string) string { return s })
 	DB = DB.Unsafe()
 
-	OutPutBuffer := &GenOut{}
+	tables := []*OutTable{}
+
 	for _, db := range DATABASES {
-		tables, err := mysql_loadTables(DB, db, "BASE TABLE")
+		nativeTables, err := mysql_loadTables(DB, db, "BASE TABLE")
 		NoErr(err)
 		_ = tables
 
-		for _, table := range tables {
+		for _, table := range nativeTables {
 			outTable := convNativeTableToOut(*table)
 			//PPJson(outTable)
 			fmt.Println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-			OutPutBuffer.Tables = append(OutPutBuffer.Tables, outTable)
+			tables = append(tables, outTable)
 		}
 	}
-	PertyPrint(OutPutBuffer.Tables[0].Indexes)
-	PertyPrint(OutPutBuffer.Tables[1].Indexes)
+	PertyPrint(tables)
 
 	// For Rust Filtering
 	// Note: We add column modifiers in here in order to have a more shorter debug outputs in above of
 	//	this line, originally we should add them in convNativeTableToOut().
-	for _, outTable := range OutPutBuffer.Tables {
+	for _, outTable := range tables {
 		// Add Modifiers
 		for _, col := range outTable.Columns {
 			col.WhereModifiersRust = col.GetModifiersRust()
@@ -47,7 +47,10 @@ func Run() {
 
 	//PertyPrint(OutPutBuffer.Tables)
 
-	setFilteredTables(OutPutBuffer)
+	OutPutBuffer := &GenOut{
+		Tables:         nil,
+		TablesFiltered: setFilteredTables(tables),
+	}
 
 	rustBuild(OutPutBuffer)
 	//goBuild(OutPutBuffer)
@@ -55,16 +58,16 @@ func Run() {
 
 }
 
-func setFilteredTables(gen *GenOut) {
-	tables := []*OutTable{}
-	for _, t := range gen.Tables {
-		// We can skip any tables that we do not want in here. For now process all of them.
+func setFilteredTables(tables []*OutTable) (res []*OutTable) {
+	tablesFiltered := []*OutTable{}
+	for _, t := range tables {
+		// We can skip any tablesFiltered that we do not want in here. For now process all of them.
 		// todo support multi primay keys
 		if t.IsAutoIncr {
 			//continue
 		}
-		tables = append(tables, t)
+		tablesFiltered = append(tablesFiltered, t)
 	}
 
-	gen.TablesFiltered = tables[0:1]
+	return tablesFiltered
 }

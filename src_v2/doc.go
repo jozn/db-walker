@@ -14,3 +14,7 @@ package src_v2
 	+ Should we assume null to default in rust or support null?
 
 */
+
+//todo
+// add support for ins in where by extracting common wherer func
+// add replace on models and mass insert by common func
